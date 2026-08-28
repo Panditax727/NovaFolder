@@ -1,0 +1,8 @@
+bin/
+obj/
+publicado/
+*.zip
+*.user
+*.suo
+.vs/
+.vscode/

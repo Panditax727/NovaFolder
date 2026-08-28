@@ -1,0 +1,5 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="android_folder_win11.Controls.FolderControl">
+    <!-- Vacío a propósito: SetFolder() en el code-behind arma todo el visual -->
+</UserControl>

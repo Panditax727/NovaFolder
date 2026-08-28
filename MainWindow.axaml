@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="android_folder_win11.MainWindow"
+        Title="Carpetas estilo Android"
+        Width="750" Height="500"
+        Background="#1e1e2e">
+    <Grid Margin="20">
+        <WrapPanel Name="FoldersPanel" Orientation="Horizontal"/>
+    </Grid>
+</Window>
