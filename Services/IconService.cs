@@ -1,6 +1,7 @@
 using System;
-using System.IO;
+using System.Collections.Concurrent;
 using System.Runtime.Versioning;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -10,89 +11,145 @@ using android_folder_win11.Models;
 namespace android_folder_win11.Services
 {
     // Toda la lógica de "cómo conseguir un ícono para mostrar" vive aquí.
-    // En Windows intenta extraer el ícono real del archivo; en cualquier otro
-    // sistema (o si falla), devuelve un cuadro de color con la inicial del nombre,
+    // En Windows extrae el ícono real en alta resolución; en cualquier otro
+    // sistema (o si falla) genera una placa con la inicial y un color propio,
     // así puedes seguir probando la interfaz mientras desarrollas en Linux.
     public static class IconService
     {
+        // Extraer un icono toca disco y, en Windows, el shell. Sin caché se
+        // repetiría en cada redibujado: una carpeta de 8 apps que se abre y se
+        // cierra son 16 extracciones por ciclo.
+        private static readonly ConcurrentDictionary<string, Bitmap?> Cache = new();
+
+        // Se pide siempre a 256 y se deja que Avalonia escale al vuelo: así el
+        // mismo bitmap sirve para la vista previa de 24 px y para la de 36, y
+        // se ve nítido en pantallas con escalado.
+        private const int TamExtraccion = 256;
+
         public static Control GetIconControl(AppShortcut? app, double size)
         {
             if (app == null)
-            {
-                return new Border { Width = size, Height = size, Margin = new Avalonia.Thickness(2) };
-            }
+                return new Border { Width = size, Height = size, Margin = new Thickness(2) };
 
-            Bitmap? bitmap = OperatingSystem.IsWindows()
-                ? ExtraerIconoWindows(app.Path)
-                : null;
+            var bitmap = Obtener(app.IconSource);
 
             if (bitmap != null)
             {
-                return new Image
+                var img = new Image
                 {
                     Source = bitmap,
                     Width = size,
                     Height = size,
-                    Margin = new Avalonia.Thickness(2)
+                    Margin = new Thickness(2)
                 };
+                // El icono se extrae a 256 px y se muestra a 24-36: sin filtrado
+                // de calidad el reescalado deja bordes dentados. Es propiedad
+                // adjunta, no una propiedad de Image.
+                RenderOptions.SetBitmapInterpolationMode(img, BitmapInterpolationMode.HighQuality);
+                ToolTip.SetTip(img, app.TargetPath ?? app.Path);
+                return img;
             }
 
-            return CrearFallback(app, size);
+            return CrearPlaca(app, size);
         }
 
-        private static Control CrearFallback(AppShortcut app, double size)
+        private static Bitmap? Obtener(string ruta)
         {
-            // Un acceso directo roto se distingue a simple vista: antes se veía
-            // igual que uno válido y solo te enterabas al hacer clic y no pasar nada.
-            var falta = !AppLauncherService.Existe(app.Path);
+            if (string.IsNullOrWhiteSpace(ruta)) return null;
 
-            var fondo = falta
-                ? Color.FromRgb(90, 90, 100)
-                : Color.FromRgb(60, 130, 200);
+            return Cache.GetOrAdd(ruta, r =>
+            {
+                if (!OperatingSystem.IsWindows()) return null;
+                return ObtenerEnWindows(r);
+            });
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static Bitmap? ObtenerEnWindows(string ruta) =>
+            IconoWindows.Obtener(ruta, TamExtraccion);
+
+        // ---- placa de respaldo ----
+        // Antes eran todas del mismo azul, así que una carpeta llena parecía un
+        // tablero de fichas iguales. Ahora el color sale del nombre, es estable
+        // entre arranques y distingue las apps de un vistazo.
+        private static Control CrearPlaca(AppShortcut app, double size)
+        {
+            var falta = !AppLauncherService.Existe(app.Path);
+            var (c1, c2) = ColoresDe(app.Name, falta);
 
             var borde = new Border
             {
                 Width = size,
                 Height = size,
-                Margin = new Avalonia.Thickness(2),
-                Background = new SolidColorBrush(fondo),
-                CornerRadius = new Avalonia.CornerRadius(4),
-                Opacity = falta ? 0.55 : 1.0,
+                Margin = new Thickness(2),
+                CornerRadius = new CornerRadius(size >= 32 ? 8 : 5),
+                Opacity = falta ? 0.5 : 1.0,
+                Background = new LinearGradientBrush
+                {
+                    StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                    EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                    GradientStops =
+                    {
+                        new GradientStop(c1, 0),
+                        new GradientStop(c2, 1)
+                    }
+                },
                 Child = new TextBlock
                 {
-                    Text = app.Name.Length > 0 ? app.Name[0].ToString().ToUpper() : "?",
+                    Text = InicialDe(app.Name),
                     Foreground = Brushes.White,
+                    FontSize = Math.Max(10, size * 0.46),
+                    FontWeight = FontWeight.SemiBold,
                     HorizontalAlignment = HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center
                 }
             };
 
-            if (falta)
-                ToolTip.SetTip(borde, $"No se encuentra:\n{app.Path}");
+            ToolTip.SetTip(borde, falta
+                ? $"No se encuentra:\n{app.Path}"
+                : app.TargetPath ?? app.Path);
 
             return borde;
         }
 
-        [SupportedOSPlatform("windows")]
-        private static Bitmap? ExtraerIconoWindows(string path)
+        private static string InicialDe(string nombre)
         {
-            if (!File.Exists(path)) return null;
+            foreach (var ch in nombre)
+                if (char.IsLetterOrDigit(ch)) return char.ToUpperInvariant(ch).ToString();
+            return "?";
+        }
 
-            try
-            {
-                using var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
-                if (icon == null) return null;
+        // Hash estable (no GetHashCode, que varía entre ejecuciones) -> tono fijo.
+        private static (Color, Color) ColoresDe(string nombre, bool apagado)
+        {
+            if (apagado)
+                return (Color.FromRgb(104, 104, 116), Color.FromRgb(78, 78, 88));
 
-                using var ms = new MemoryStream();
-                using var bmp = icon.ToBitmap();
-                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                ms.Position = 0;
-                return new Bitmap(ms);
-            }
-            catch
+            uint h = 2166136261;
+            foreach (var ch in nombre) { h ^= ch; h *= 16777619; }
+
+            double tono = h % 360;
+            return (DesdeHsl(tono, 0.52, 0.56), DesdeHsl(tono, 0.55, 0.42));
+        }
+
+        private static Color DesdeHsl(double h, double s, double l)
+        {
+            double c = (1 - Math.Abs(2 * l - 1)) * s;
+            double x = c * (1 - Math.Abs((h / 60.0) % 2 - 1));
+            double m = l - c / 2;
+            (double r, double g, double b) = h switch
             {
-                return null;
-            }
+                < 60  => (c, x, 0.0),
+                < 120 => (x, c, 0.0),
+                < 180 => (0.0, c, x),
+                < 240 => (0.0, x, c),
+                < 300 => (x, 0.0, c),
+                _     => (c, 0.0, x)
+            };
+            return Color.FromRgb(
+                (byte)Math.Round((r + m) * 255),
+                (byte)Math.Round((g + m) * 255),
+                (byte)Math.Round((b + m) * 255));
         }
     }
 }

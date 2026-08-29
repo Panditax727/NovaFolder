@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
@@ -20,13 +21,9 @@ namespace android_folder_win11.Controls
         private const double AnchoCerrado = 100, AltoCerrado = 130;
         private const double AnchoAbierto = 220;
 
-        // Medidas de una fila del panel abierto, para calcular el alto:
-        //   icono 36 + su margen (2+2) = 40
-        //   nombre a 11 px, hasta dos líneas por TextWrapping = 30
-        //   margen del item (4+4) = 8
-        private const double AltoFila = 78;
-        private const double AltoTitulo = 30;   // título + su margen inferior
-        private const double MargenPanel = 24;  // márgenes del StackPanel exterior
+        // Holgura sobre lo que mida el contenido: cubre el borde y el margen
+        // del StackPanel interior.
+        private const double HolguraPanel = 26;
 
         // Solo una carpeta abierta a la vez. Sin esto, abrir la segunda dejaba
         // las dos expandidas: el WrapPanel se reacomodaba y las tarjetas saltaban
@@ -52,12 +49,6 @@ namespace android_folder_win11.Controls
 
         private Border ConstruirVisual(AppFolder folder)
         {
-            // Alto calculado a partir del número de apps. Antes era una constante
-            // de 210 px con ClipToBounds, así que a partir de la quinta app las
-            // filas de abajo quedaban recortadas y no había forma de verlas.
-            int filas = (int)Math.Ceiling(folder.Apps.Count / 2.0);
-            _altoAbierto = Math.Max(AltoCerrado, MargenPanel + AltoTitulo + filas * AltoFila);
-
             _vistaColapsada = ConstruirVistaColapsada(folder);
             _vistaExpandida = ConstruirVistaExpandida(folder);
 
@@ -77,13 +68,23 @@ namespace android_folder_win11.Controls
                 ClipToBounds = true,
                 Transitions = new Transitions
                 {
-                    new DoubleTransition { Property = Border.WidthProperty, Duration = TimeSpan.FromMilliseconds(200) },
-                    new DoubleTransition { Property = Border.HeightProperty, Duration = TimeSpan.FromMilliseconds(200) }
+                    // CubicEaseOut: arranca rapido y frena al final. Con la curva
+                    // lineal de antes el despliegue se sentia mecanico.
+                    new DoubleTransition { Property = Border.WidthProperty,   Duration = TimeSpan.FromMilliseconds(220), Easing = new CubicEaseOut() },
+                    new DoubleTransition { Property = Border.HeightProperty,  Duration = TimeSpan.FromMilliseconds(220), Easing = new CubicEaseOut() },
+                    new DoubleTransition { Property = Border.OpacityProperty, Duration = TimeSpan.FromMilliseconds(120) }
                 }
             };
 
             // El handler es async void: si Toggle lanzara, la excepción no tendría
             // quién la recoja y se llevaría el proceso entero. Por eso el try.
+            // Realce al pasar por encima: la tarjeta se aclara un poco. Es lo
+            // que hace que se note "viva" sin mover nada de sitio.
+            var fondoNormal = new SolidColorBrush(Color.FromArgb(90, 255, 255, 255));
+            var fondoHover  = new SolidColorBrush(Color.FromArgb(125, 255, 255, 255));
+            _borde.PointerEntered += (s, e) => _borde.Background = fondoHover;
+            _borde.PointerExited  += (s, e) => _borde.Background = fondoNormal;
+
             _borde.PointerPressed += async (s, e) =>
             {
                 try { await Toggle(); }
@@ -106,7 +107,7 @@ namespace android_folder_win11.Controls
             for (int i = 0; i < 4; i++)
             {
                 var app = i < folder.Apps.Count ? folder.Apps[i] : null;
-                var cell = IconService.GetIconControl(app, 24);
+                var cell = IconService.GetIconControl(app, 26);
                 Grid.SetRow(cell, i / 2);
                 Grid.SetColumn(cell, i % 2);
                 previewGrid.Children.Add(cell);
@@ -133,7 +134,7 @@ namespace android_folder_win11.Controls
                 Margin = new Thickness(10),
                 Transitions = new Transitions
                 {
-                    new DoubleTransition { Property = StackPanel.OpacityProperty, Duration = TimeSpan.FromMilliseconds(150) }
+                    new DoubleTransition { Property = StackPanel.OpacityProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new CubicEaseOut() }
                 }
             };
 
@@ -177,7 +178,7 @@ namespace android_folder_win11.Controls
                     Margin = new Thickness(4),
                     Cursor = new Cursor(StandardCursorType.Hand)
                 };
-                itemStack.Children.Add(IconService.GetIconControl(app, 36));
+                itemStack.Children.Add(IconService.GetIconControl(app, 40));
                 itemStack.Children.Add(new TextBlock
                 {
                     Text = app.Name,
@@ -189,6 +190,21 @@ namespace android_folder_win11.Controls
                     MaxWidth = 70
                 });
 
+                var realce = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255)),
+                    CornerRadius = new CornerRadius(8),
+                    Child = itemStack,
+                    Transitions = new Transitions
+                    {
+                        new BrushTransition { Property = Border.BackgroundProperty, Duration = TimeSpan.FromMilliseconds(120) }
+                    }
+                };
+                realce.PointerEntered += (s, e) =>
+                    realce.Background = new SolidColorBrush(Color.FromArgb(38, 255, 255, 255));
+                realce.PointerExited += (s, e) =>
+                    realce.Background = new SolidColorBrush(Color.FromArgb(0, 255, 255, 255));
+
                 itemStack.PointerPressed += (s, e) =>
                 {
                     e.Handled = true; // evita que también dispare el toggle de la carpeta
@@ -196,9 +212,9 @@ namespace android_folder_win11.Controls
                     MostrarAviso(error);
                 };
 
-                Grid.SetRow(itemStack, i / 2);
-                Grid.SetColumn(itemStack, i % 2);
-                appsGrid.Children.Add(itemStack);
+                Grid.SetRow(realce, i / 2);
+                Grid.SetColumn(realce, i % 2);
+                appsGrid.Children.Add(realce);
             }
 
             view.Children.Add(appsGrid);
@@ -235,7 +251,20 @@ namespace android_folder_win11.Controls
 
             // El aviso necesita sitio: se agranda la tarjeta mientras se muestra.
             if (_borde != null && _abierta)
-                _borde.Height = _altoAbierto + 36;
+                _borde.Height = MedirAltoAbierto();
+        }
+
+        // Se le pregunta al propio panel cuánto necesita, en vez de estimarlo
+        // con una fórmula. Así un nombre largo que se parta en dos líneas, o un
+        // cambio de tipografía, no vuelven a dejar filas recortadas.
+        private double MedirAltoAbierto()
+        {
+            if (_vistaExpandida == null) return AltoCerrado;
+
+            _vistaExpandida.Measure(new Size(AnchoAbierto, double.PositiveInfinity));
+            var alto = _vistaExpandida.DesiredSize.Height + HolguraPanel;
+            _altoAbierto = Math.Max(AltoCerrado, alto);
+            return _altoAbierto;
         }
 
         private async Task Toggle()
@@ -250,10 +279,12 @@ namespace android_folder_win11.Controls
             if (_abierta)
             {
                 _abiertaActual = this;
-                _borde.Width = AnchoAbierto;
-                _borde.Height = _altoAbierto;
+                // El orden importa: un control con IsVisible=false mide 0, asi
+                // que hay que hacerlo visible ANTES de preguntarle su tamaño.
                 _vistaColapsada.IsVisible = false;
                 _vistaExpandida.IsVisible = true;
+                _borde.Width = AnchoAbierto;
+                _borde.Height = MedirAltoAbierto();
                 await Task.Delay(10); // deja aplicar IsVisible antes de animar la opacidad
                 _vistaExpandida.Opacity = 1;
             }

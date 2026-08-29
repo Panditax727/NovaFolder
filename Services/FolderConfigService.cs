@@ -59,19 +59,39 @@ namespace android_folder_win11.Services
             return data.Select(kv => new AppFolder
             {
                 Name = kv.Key,
-                Apps = (kv.Value ?? Array.Empty<string>()).Select(filename => new AppShortcut
-                {
-                    Name = Path.GetFileNameWithoutExtension(filename),
-                    // Una ruta absoluta en el JSON se respeta tal cual; solo se
-                    // asume el Escritorio cuando viene un nombre suelto.
-                    Path = Path.IsPathRooted(filename)
-                        ? filename
-                        : Path.Combine(DesktopPath, filename)
-                }).ToList()
+                Apps = (kv.Value ?? Array.Empty<string>()).Select(CrearAcceso).ToList()
             }).ToList();
         }
 
         public static string RutaDeConfiguracion => ConfigPath;
+
+        private static AppShortcut CrearAcceso(string filename)
+        {
+            // Una ruta absoluta en el JSON se respeta tal cual; solo se asume
+            // el Escritorio cuando viene un nombre suelto.
+            var ruta = Path.IsPathRooted(filename) ? filename : Path.Combine(DesktopPath, filename);
+
+            var acceso = new AppShortcut
+            {
+                Name = Path.GetFileNameWithoutExtension(filename),
+                Path = ruta
+            };
+
+            // Si es un .lnk se lee para sacar el ejecutable real: de ahi sale un
+            // icono de verdad en vez del generico con la flechita del acceso directo.
+            if (LnkReader.EsLnk(ruta))
+            {
+                var info = LnkReader.Leer(ruta);
+                if (info != null)
+                {
+                    acceso.TargetPath = info.Destino;
+                    if (!string.IsNullOrWhiteSpace(info.Descripcion))
+                        acceso.Name = info.Descripcion!;
+                }
+            }
+
+            return acceso;
+        }
 
         // Si existe un folders.json de la versión antigua junto al ejecutable,
         // se copia una sola vez al perfil para no perder lo que el usuario tenía.
