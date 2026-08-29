@@ -15,33 +15,86 @@ namespace android_folder_win11.Services
         private static readonly string DesktopPath =
             Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
 
-        private static string ConfigPath =>
-            Path.Combine(AppContext.BaseDirectory, "folders.json");
+        // La configuración va al perfil del usuario, NO junto al ejecutable.
+        // Antes se guardaba en AppContext.BaseDirectory, que es bin/Debug/netX:
+        // un "dotnet clean" o borrar bin/ se llevaba por delante las carpetas del
+        // usuario, y una vez instalado en Program Files ni siquiera hay permiso
+        // de escritura ahí.
+        //   Windows -> %APPDATA%\NovaFolder\folders.json
+        //   Linux   -> ~/.config/NovaFolder/folders.json
+        private static string ConfigDir =>
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "NovaFolder");
+
+        private static string ConfigPath => Path.Combine(ConfigDir, "folders.json");
 
         public static List<AppFolder> Cargar()
         {
-            if (!File.Exists(ConfigPath))
-            {
-                CrearConfigDeEjemplo();
-            }
+            Directory.CreateDirectory(ConfigDir);
+            MigrarDesdeCarpetaDelEjecutable();
 
-            var json = File.ReadAllText(ConfigPath);
-            var data = JsonSerializer.Deserialize<Dictionary<string, string[]>>(json)
+            if (!File.Exists(ConfigPath))
+                CrearConfigDeEjemplo();
+
+            Dictionary<string, string[]> data;
+            try
+            {
+                var json = File.ReadAllText(ConfigPath);
+                data = JsonSerializer.Deserialize<Dictionary<string, string[]>>(json)
                        ?? new Dictionary<string, string[]>();
+            }
+            catch (JsonException ex)
+            {
+                // Un JSON mal escrito a mano no debe impedir que la app abra:
+                // se aparta el archivo roto y se arranca con el de ejemplo.
+                var roto = ConfigPath + ".roto";
+                try { File.Move(ConfigPath, roto, overwrite: true); } catch { /* da igual */ }
+                Console.Error.WriteLine($"folders.json inválido ({ex.Message}). Se movió a {roto}.");
+                CrearConfigDeEjemplo();
+                data = JsonSerializer.Deserialize<Dictionary<string, string[]>>(
+                           File.ReadAllText(ConfigPath)) ?? new();
+            }
 
             return data.Select(kv => new AppFolder
             {
                 Name = kv.Key,
-                Apps = kv.Value.Select(filename => new AppShortcut
+                Apps = (kv.Value ?? Array.Empty<string>()).Select(filename => new AppShortcut
                 {
                     Name = Path.GetFileNameWithoutExtension(filename),
-                    Path = Path.Combine(DesktopPath, filename)
+                    // Una ruta absoluta en el JSON se respeta tal cual; solo se
+                    // asume el Escritorio cuando viene un nombre suelto.
+                    Path = Path.IsPathRooted(filename)
+                        ? filename
+                        : Path.Combine(DesktopPath, filename)
                 }).ToList()
             }).ToList();
         }
 
+        public static string RutaDeConfiguracion => ConfigPath;
+
+        // Si existe un folders.json de la versión antigua junto al ejecutable,
+        // se copia una sola vez al perfil para no perder lo que el usuario tenía.
+        private static void MigrarDesdeCarpetaDelEjecutable()
+        {
+            if (File.Exists(ConfigPath)) return;
+
+            var antiguo = Path.Combine(AppContext.BaseDirectory, "folders.json");
+            if (!File.Exists(antiguo)) return;
+
+            try
+            {
+                File.Copy(antiguo, ConfigPath);
+                Console.Error.WriteLine($"Configuración migrada de {antiguo} a {ConfigPath}.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"No se pudo migrar la configuración antigua: {ex.Message}");
+            }
+        }
+
         // Formato del JSON: { "Juegos": ["Steam.lnk", "Minecraft.lnk"], "Utilidades": [...] }
-        // Los nombres deben coincidir exactamente con archivos reales en el Escritorio.
+        // Un nombre suelto se busca en el Escritorio; también se acepta una ruta completa.
         private static void CrearConfigDeEjemplo()
         {
             var ejemplo = new Dictionary<string, string[]>

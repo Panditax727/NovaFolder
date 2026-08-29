@@ -42,13 +42,22 @@ namespace android_folder_win11.Services
 
         private static Control CrearFallback(AppShortcut app, double size)
         {
-            return new Border
+            // Un acceso directo roto se distingue a simple vista: antes se veía
+            // igual que uno válido y solo te enterabas al hacer clic y no pasar nada.
+            var falta = !AppLauncherService.Existe(app.Path);
+
+            var fondo = falta
+                ? Color.FromRgb(90, 90, 100)
+                : Color.FromRgb(60, 130, 200);
+
+            var borde = new Border
             {
                 Width = size,
                 Height = size,
                 Margin = new Avalonia.Thickness(2),
-                Background = new SolidColorBrush(Color.FromRgb(60, 130, 200)),
+                Background = new SolidColorBrush(fondo),
                 CornerRadius = new Avalonia.CornerRadius(4),
+                Opacity = falta ? 0.55 : 1.0,
                 Child = new TextBlock
                 {
                     Text = app.Name.Length > 0 ? app.Name[0].ToString().ToUpper() : "?",
@@ -57,11 +66,18 @@ namespace android_folder_win11.Services
                     VerticalAlignment = VerticalAlignment.Center
                 }
             };
+
+            if (falta)
+                ToolTip.SetTip(borde, $"No se encuentra:\n{app.Path}");
+
+            return borde;
         }
 
         [SupportedOSPlatform("windows")]
         private static Bitmap? ExtraerIconoWindows(string path)
         {
+            if (!File.Exists(path)) return null;
+
             try
             {
                 using var icon = System.Drawing.Icon.ExtractAssociatedIcon(path);
