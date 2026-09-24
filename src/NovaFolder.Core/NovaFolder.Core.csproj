@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Logica de NovaFolder sin interfaz grafica: modelos, CRUD de carpetas,
+       validaciones, errores y persistencia. No depende de Avalonia, asi que
+       se prueba con tests normales (ver tests/NovaFolder.Core.Tests). -->
+  <PropertyGroup>
+    <RootNamespace>NovaFolder.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NovaFolder.Core.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,27 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,props,csproj,slnx,axaml,xml,manifest}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+# Estilo del proyecto
+csharp_style_namespace_declarations = block_scoped:silent
+csharp_prefer_braces = when_multiline:silent
+dotnet_sort_system_directives_first = true
+
+# Los comentarios y mensajes estan en espanol y la UI tambien: no se exige
+# pasar CultureInfo en cada string.Format de mensajes al usuario.
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1307.severity = none
+dotnet_diagnostic.CA1309.severity = none
+dotnet_diagnostic.CA1310.severity = none

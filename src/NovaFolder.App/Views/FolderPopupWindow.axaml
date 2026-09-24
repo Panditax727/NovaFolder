@@ -1,0 +1,100 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NovaFolder.Views.FolderPopupWindow"
+        Title="NovaFolder"
+        SizeToContent="WidthAndHeight"
+        CanResize="False"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        Background="Transparent"
+        Topmost="True">
+
+    <!-- La tarjeta ES la ventana entera: nace un poco más pequeña y
+         transparente, y crece hasta su tamaño (ver OnOpened). -->
+    <Border Name="Tarjeta"
+            Classes="nova-superficie"
+            Padding="12"
+            Opacity="0"
+            RenderTransform="scale(0.94)"
+            RenderTransformOrigin="0%,0%">
+        <Border.Transitions>
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.14"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18">
+                    <TransformOperationsTransition.Easing>
+                        <CubicEaseOut/>
+                    </TransformOperationsTransition.Easing>
+                </TransformOperationsTransition>
+            </Transitions>
+        </Border.Transitions>
+
+        <DockPanel Name="Raiz">
+            <!-- Encabezado: nombre (clic para renombrar) y acciones -->
+            <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="4,0,0,8">
+                <Panel Grid.Column="0" VerticalAlignment="Center">
+                    <TextBlock Name="Titulo"
+                               Classes="titulo"
+                               Cursor="IBeam"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"
+                               ToolTip.Tip="Clic para cambiar el nombre"/>
+                    <TextBox Name="EditorTitulo"
+                             IsVisible="False"
+                             FontSize="15"
+                             FontWeight="SemiBold"
+                             MaxLength="60"
+                             Padding="6,3"
+                             MinHeight="0"
+                             VerticalAlignment="Center"/>
+                </Panel>
+                <Button Name="BotonAgregar" Grid.Column="1" Classes="nova-icono"
+                        Content="&#xE710;" ToolTip.Tip="Agregar elementos (Ctrl+O)"/>
+                <Button Name="BotonMas" Grid.Column="2" Classes="nova-icono"
+                        Content="&#xE712;" ToolTip.Tip="Más opciones"/>
+            </Grid>
+
+            <!-- Filtro: solo aparece cuando la carpeta ya es grande -->
+            <TextBox Name="Buscador"
+                     DockPanel.Dock="Top"
+                     IsVisible="False"
+                     PlaceholderText="Buscar en la carpeta…"
+                     Margin="0,0,0,8"/>
+
+            <TextBlock Name="Aviso"
+                       DockPanel.Dock="Bottom"
+                       Classes="error"
+                       IsVisible="False"
+                       Margin="0,8,0,0"/>
+
+            <Panel>
+                <ScrollViewer Name="Desplazador"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <WrapPanel Name="Elementos" Orientation="Horizontal"/>
+                </ScrollViewer>
+
+                <!-- Estado vacío: explica cómo se llena la carpeta -->
+                <StackPanel Name="Vacia" IsVisible="False" Spacing="10" Margin="12,18,12,14">
+                    <TextBlock Text="&#xE8B7;"
+                               FontFamily="{StaticResource NovaIconos}"
+                               FontSize="34" Opacity="0.35"
+                               Foreground="{StaticResource NovaTexto}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Classes="suave"
+                               Text="Arrastra aquí apps, juegos o archivos&#x0a;desde el Escritorio o el Explorador."
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                    <Button Name="BotonAgregarVacia" Classes="nova-accion" Content="Elegir archivos…"/>
+                </StackPanel>
+
+                <TextBlock Name="SinResultados"
+                           Classes="suave"
+                           IsVisible="False"
+                           Text="Nada coincide con la búsqueda."
+                           HorizontalAlignment="Center"
+                           Margin="0,24"/>
+            </Panel>
+        </DockPanel>
+    </Border>
+</Window>

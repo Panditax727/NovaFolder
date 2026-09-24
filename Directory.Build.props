@@ -1,0 +1,23 @@
+<Project>
+  <!-- Comun a todos los proyectos de la solucion. -->
+  <PropertyGroup>
+    <!-- Version unica de la app. En CI se sobrescribe con la del tag (v1.2.3). -->
+    <Version>1.0.0</Version>
+    <Product>NovaFolder</Product>
+    <Authors>Panditax727</Authors>
+    <Copyright>© 2026 Panditax727</Copyright>
+
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+
+    <!-- Calidad: los avisos del compilador y de los analizadores rompen la
+         compilacion, asi no se acumulan. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

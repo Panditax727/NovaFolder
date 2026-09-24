@@ -1,0 +1,59 @@
+name: Release
+
+# Publica una version nueva al subir un tag:
+#   git tag v1.2.0
+#   git push origin v1.2.0
+# Genera el instalador y lo sube a GitHub Releases; las copias instaladas
+# lo detectan y se actualizan solas.
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Version desde el tag
+        id: version
+        shell: pwsh
+        run: |
+          $version = '${{ github.ref_name }}'.TrimStart('v')
+          $enProps = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($version -ne $enProps) {
+            throw "El tag ($version) no coincide con Directory.Build.props ($enProps). Actualiza la version antes de etiquetar."
+          }
+          "numero=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Restaurar herramientas
+        run: dotnet tool restore
+
+      # Las versiones anteriores permiten generar actualizaciones "delta"
+      # (solo lo que cambio). En la primera version no hay nada: se ignora.
+      - name: Descargar version anterior
+        shell: pwsh
+        run: |
+          dotnet vpk download github --repoUrl "${{ github.server_url }}/${{ github.repository }}" --token "${{ secrets.GITHUB_TOKEN }}" --outputDir artifacts/releases
+          if ($LASTEXITCODE -ne 0) { Write-Host 'Sin version anterior; se publica completa.'; $global:LASTEXITCODE = 0 }
+
+      - name: Pruebas, compilacion e instalador
+        shell: pwsh
+        run: ./scripts/publicar.ps1 -Version ${{ steps.version.outputs.numero }}
+
+      - name: Publicar en GitHub Releases
+        run: >
+          dotnet vpk upload github
+          --repoUrl "${{ github.server_url }}/${{ github.repository }}"
+          --token "${{ secrets.GITHUB_TOKEN }}"
+          --outputDir artifacts/releases
+          --tag ${{ github.ref_name }}
+          --releaseName "NovaFolder ${{ steps.version.outputs.numero }}"
+          --publish

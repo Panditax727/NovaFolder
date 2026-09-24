@@ -1,55 +1,107 @@
 # NovaFolder 📁✨
 
-**NovaFolder** es una aplicación de escritorio nativa para Windows 11 desarrollada en C# y Avalonia UI, diseñada para organizar accesos directos, aplicaciones y archivos en carpetas flotantes e interactivas inspiradas en la interfaz de Android.
+[![CI](https://github.com/Panditax727/NovaFolder/actions/workflows/ci.yml/badge.svg)](https://github.com/Panditax727/NovaFolder/actions/workflows/ci.yml)
+
+Organiza los accesos directos, juegos y archivos del Escritorio de Windows en carpetas que se abren con un clic, al estilo Android, sin pasar por el Explorador.
+
+- **¿Quieres usarlo?** → [Guía de instalación](docs/INSTALACION.md)
+- **¿Qué cambió?** → [CHANGELOG](CHANGELOG.md)
 
 ---
 
-## Características
-* **Estilo Android en Desktop:** Agrupa aplicaciones y archivos en carpetas compactas, desplegables y personalizables.
-* **Integración con Windows 11:** Interfaz adaptada al lenguaje visual Fluent Design.
-* **Arquitectura Modular:** Separación clara entre modelos, servicios del sistema y controles de usuario reutilizables.
-* **Ligero y Rápido:** Construcción nativa sobre .NET y Avalonia UI (soporte SkiaSharp/HarfBuzzSharp).
-
----
-
-## Arquitectura y Estructura del Proyecto
+## Estructura del proyecto
 
 ```text
 NovaFolder/
-├── Models/
-│   ├── AppShortcut.cs          → Representa una app individual (nombre + ruta)
-│   └── AppFolder.cs            → Contenedor que agrupa varias AppShortcut
-├── Services/
-│   ├── FolderConfigService.cs  → Gestiona folders.json y resuelve rutas del Escritorio
-│   ├── IconService.cs          → Extrae íconos reales (Windows) o fallback (Linux/error)
-│   └── AppLauncherService.cs   → Ejecuta una app dada su ruta de sistema
-├── Controls/
-│   ├── FolderControl.axaml     → Contenedor visual del widget de carpeta
-│   └── FolderControl.axaml.cs  → Lógica visual: preview 2x2, expandir/colapsar y eventos
-├── MainWindow.axaml
-└── MainWindow.axaml.cs         → Carga la configuración e instancia los FolderControl
+├── src/
+│   ├── NovaFolder.Core/          Lógica sin interfaz (se prueba de forma aislada)
+│   │   ├── Models/               AppFolder, AppShortcut, NovaConfig
+│   │   ├── Storage/              FolderStore (CRUD), ConfigRepository (JSON), AlmacenAccesos, LnkReader
+│   │   ├── Validation/           Validador + Limites: reglas de nombres, rutas y tamaños
+│   │   ├── Errors/               NovaFolderException y derivadas
+│   │   ├── Diagnostics/          Log: registro diario en archivo
+│   │   └── RutasApp.cs           Todas las rutas del disco, inyectables
+│   │
+│   └── NovaFolder.App/           Aplicación de escritorio (Avalonia, solo Windows)
+│       ├── Program.cs            Arranque: Velopack, registro, errores globales, instancia única
+│       ├── App.axaml(.cs)        Raíz de composición, bandeja y estilos centralizados
+│       ├── Views/                MainWindow (widget), FolderPopupWindow, TrayMenuWindow
+│       ├── Controls/             FolderTile, AppTile, Interacciones (clic, teclado, arrastrar)
+│       └── Services/
+│           ├── Applications/     Lanzar apps, accesos del Escritorio, ícono de carpeta
+│           ├── Windows/          Íconos del shell, hilo STA, instancia única, autoinicio, orden Z
+│           └── Updates/          Actualizaciones automáticas (Velopack)
+│
+├── tests/NovaFolder.Core.Tests/  Pruebas xUnit de Core
+├── scripts/publicar.ps1          Genera el instalador
+├── assets/                       Ícono e imagen del instalador
+├── docs/                         Documentación para usuarios
+└── .github/workflows/            CI (pruebas) y Release (instalador + actualizaciones)
+```
 
-cat << 'EOF' >> README.md
+### Principios
 
-### Principios de diseño aplicados
+- **Capas.** `Core` no sabe nada de ventanas ni de Windows. `App` depende de `Core`, nunca al revés.
+- **Un solo dueño del estado.** Todo cambio pasa por `FolderStore`, que valida, guarda y avisa con `Changed`. Las ventanas solo escuchan y se redibujan.
+- **Errores con dos categorías.**
+  - `NovaFolderException` y sus derivadas (`ValidacionException`, `CarpetaNoEncontradaException`, `ConfiguracionException`) son errores esperables, con un mensaje pensado para el usuario. La interfaz los muestra en la barra de avisos.
+  - Cualquier otra excepción es un fallo del programa. La recogen los manejadores globales (`Program`, `App.AlFallarInterfaz`), que la registran en `logs/` y la app sigue funcionando.
+- **La interfaz nunca espera al shell.** Íconos, accesos del Escritorio y COM corren en un hilo STA de fondo (`StaWorker`).
 
-* **Models:** Clases puras de datos sin lógica de presentación. Permiten extender atributos (como colores o temas por carpeta) sin romper la estructura principal.
-* **Services:** Módulos estáticos y sin estado dedicados a tareas concretas (lectura de config, extracción de íconos de accesos directos y ejecución de procesos).
-* **Controls (`FolderControl`):** Componente de UI completamente encapsulado. La ventana principal desconoce la renderización interna de la carpeta y solo administra sus instancias.
-* **MainWindow:** Muestra la vista principal actuando únicamente como contenedor de la lista de carpetas cargadas.
+### API de carpetas (`FolderStore`)
+
+| | Carpetas | Elementos |
+|---|---|---|
+| **Crear** | `CrearCarpeta(nombre?, rutas?)`, `CrearCarpetaMoviendo` | `AgregarElementos(carpeta, rutas, indice?)` → `ResultadoAgregar` |
+| **Leer** | `Folders`, `Buscar(nombre)`, `Obtener(nombre)` | `carpeta.Apps` |
+| **Actualizar** | `RenombrarCarpeta` | `MoverElemento`, `ReordenarElemento` |
+| **Eliminar** | `EliminarCarpeta` → índice, `RestaurarCarpeta` (deshacer) | `QuitarElemento`, `QuitarElementos` |
+
+### Seguridad
+
+- Sin permisos de administrador (`asInvoker`). Solo escribe en el perfil del usuario.
+- La configuración se valida al cargarla: nombres válidos para Windows, sin duplicados, y límites de tamaño (5 MB), de carpetas (100) y de elementos (500 por carpeta). Un JSON corrupto se aparta como `.roto` y la app arranca igual.
+- El canal entre instancias (`SingleInstanceService`) usa un named pipe con `CurrentUserOnly` y limita el tamaño de los mensajes.
+- Solo se borran o mueven archivos que NovaFolder creó: sus `.lnk` del Escritorio (identificados por `--folder`), su caché de íconos y su almacén de accesos.
+- Las actualizaciones no llevan ningún token en el ejecutable. Velopack verifica el hash de cada paquete descargado.
+
+### Datos del usuario
+
+`%APPDATA%\NovaFolder\`:
+
+| Ruta | Contenido |
+|---|---|
+| `folders.json` | Configuración. Se puede editar a mano y se recarga al guardar |
+| `accesos\` | Accesos directos sacados del Escritorio (opción «Quitar del Escritorio al agregar») |
+| `iconos\` | Íconos generados para las carpetas del Escritorio |
+| `logs\` | Registro diario; se guardan 14 días |
 
 ---
 
-## 💻 Desarrollo y Compilación
+## Desarrollo
 
-### Requisitos
-* .NET SDK 8.0 o superior
+Requisitos: **.NET SDK 10** y Windows 10/11.
 
-### Dependencias e inicio local
-```bash
-# Agregar dependencia para el manejo de íconos en Windows
-dotnet add package System.Drawing.Common
+```powershell
+dotnet build NovaFolder.slnx                         # compilar todo
+dotnet test --solution NovaFolder.slnx               # pruebas
+dotnet run --project src/NovaFolder.App              # ejecutar
+```
 
-# Restaurar paquetes y ejecutar
-dotnet restore
-dotnet run
+La compilación trata los avisos como errores (`Directory.Build.props`). Las versiones de los paquetes están en `Directory.Packages.props`.
+
+Una copia ejecutada con `dotnet run` no se actualiza sola. Solo lo hace la instalada con el Setup.
+
+## Publicar una versión
+
+1. Anota los cambios en `CHANGELOG.md` y sube `<Version>` en `Directory.Build.props` (SemVer).
+2. Haz commit y crea el tag con el mismo número:
+   ```powershell
+   git tag v1.1.0
+   git push origin main v1.1.0
+   ```
+3. El workflow **Release** ejecuta las pruebas, genera el instalador y lo publica en GitHub Releases. Las copias instaladas se actualizan solas.
+
+Para generar el instalador en local, sin publicar: `.\scripts\publicar.ps1` (el resultado queda en `artifacts\releases\`).
+
+> ⚠️ Las actualizaciones automáticas descargan desde GitHub Releases, así que **el repositorio (o uno solo para releases) tiene que ser público**. La URL está en `UpdateService.RepositorioGitHub`.

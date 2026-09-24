@@ -1,0 +1,144 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NovaFolder.App"
+             RequestedThemeVariant="Dark">
+    <!-- Oscuro fijo: todo el texto de NovaFolder es claro sobre vidrio
+         oscuro. Con "Default" y Windows en modo claro, los TextBox y
+         menús contextuales de Fluent salían blancos con texto negro. -->
+
+    <Application.Resources>
+        <!-- Paleta: cambiar aquí cambia toda la app. -->
+        <SolidColorBrush x:Key="NovaSuperficie" Color="#EB1C1C28"/>
+        <SolidColorBrush x:Key="NovaBorde" Color="#2EFFFFFF"/>
+        <SolidColorBrush x:Key="NovaTarjeta" Color="#1FFFFFFF"/>
+        <SolidColorBrush x:Key="NovaTarjetaHover" Color="#33FFFFFF"/>
+        <SolidColorBrush x:Key="NovaHueco" Color="#14FFFFFF"/>
+        <SolidColorBrush x:Key="NovaAcento" Color="#9B7BF0"/>
+        <SolidColorBrush x:Key="NovaAcentoSuave" Color="#339B7BF0"/>
+        <SolidColorBrush x:Key="NovaTexto" Color="#FFFFFFFF"/>
+        <SolidColorBrush x:Key="NovaTextoSuave" Color="#B3FFFFFF"/>
+        <SolidColorBrush x:Key="NovaError" Color="#FF8C8C"/>
+
+        <FontFamily x:Key="NovaIconos">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+
+        <!-- Superficie de vidrio de popups y menús -->
+        <Style Selector="Border.nova-superficie">
+            <Setter Property="Background" Value="{StaticResource NovaSuperficie}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource NovaBorde}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+        </Style>
+
+        <!-- Tarjeta de carpeta en el widget -->
+        <Style Selector="Border.nova-carpeta">
+            <Setter Property="Background" Value="{StaticResource NovaTarjeta}"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.12"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.12"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.nova-carpeta:pointerover">
+            <Setter Property="Background" Value="{StaticResource NovaTarjetaHover}"/>
+        </Style>
+
+        <!-- Elemento (app/archivo) dentro de una carpeta abierta -->
+        <Style Selector="Border.nova-elemento">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="RenderTransform" Value="scale(1)"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.1"/>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Border.nova-elemento:pointerover">
+            <Setter Property="Background" Value="{StaticResource NovaTarjeta}"/>
+        </Style>
+        <Style Selector="Border.nova-elemento:focus-within">
+            <Setter Property="Background" Value="{StaticResource NovaTarjeta}"/>
+        </Style>
+
+        <!-- Respuesta al clic: se hunde un poco, como un botón físico.
+             Border no tiene :pressed, así que el código pone la clase. -->
+        <Style Selector="Border.presionado">
+            <Setter Property="RenderTransform" Value="scale(0.94)"/>
+        </Style>
+
+        <!-- El elemento que se está arrastrando queda como "hueco" -->
+        <Style Selector="Border.arrastrando">
+            <Setter Property="Opacity" Value="0.35"/>
+        </Style>
+
+        <!-- Destino válido mientras se arrastran archivos encima -->
+        <Style Selector="Border.soltar-aqui">
+            <Setter Property="Background" Value="{StaticResource NovaAcentoSuave}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource NovaAcento}"/>
+        </Style>
+
+        <!-- Botón plano de solo ícono (agregar, más opciones...) -->
+        <Style Selector="Button.nova-icono">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTextoSuave}"/>
+            <Setter Property="FontFamily" Value="{StaticResource NovaIconos}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="7"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.nova-icono:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaTarjeta}"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+        </Style>
+        <Style Selector="Button.nova-icono:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaHueco}"/>
+        </Style>
+
+        <!-- Botón con texto del estado vacío -->
+        <Style Selector="Button.nova-accion">
+            <Setter Property="Background" Value="{StaticResource NovaAcentoSuave}"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.nova-accion:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaAcento}"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+        </Style>
+
+        <Style Selector="TextBlock.titulo">
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.suave">
+            <Setter Property="Foreground" Value="{StaticResource NovaTextoSuave}"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="TextBlock.error">
+            <Setter Property="Foreground" Value="{StaticResource NovaError}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+    </Application.Styles>
+</Application>

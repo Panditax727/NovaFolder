@@ -1,0 +1,9 @@
+# Fin de línea normalizado: LF en el repositorio, el nativo en cada equipo.
+* text=auto eol=crlf
+*.sh text eol=lf
+
+# Binarios: nunca tocar.
+*.ico binary
+*.png binary
+*.exe binary
+*.dll binary

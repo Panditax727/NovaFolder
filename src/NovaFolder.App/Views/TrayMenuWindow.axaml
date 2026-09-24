@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NovaFolder.Views.TrayMenuWindow"
+        Title="NovaFolder"
+        SizeToContent="WidthAndHeight"
+        CanResize="False"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        Background="Transparent"
+        Topmost="True">
+    <Border Name="Marco"
+            Classes="nova-superficie"
+            CornerRadius="10"
+            Padding="6"
+            MinWidth="200">
+        <StackPanel Name="Opciones" Spacing="2"/>
+    </Border>
+</Window>

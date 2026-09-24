@@ -1,0 +1,95 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NovaFolder.Views.MainWindow"
+        Title="NovaFolder"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        Background="Transparent">
+
+    <!-- Panel de respaldo: si el sistema no da Mica ni acrílico (Linux, o
+         Windows 10), este degradado evita que la ventana se vea transparente
+         y con el texto ilegible sobre el escritorio. -->
+    <Panel>
+        <Border Name="FondoRespaldo" IsVisible="False">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Color="#1E1E2E" Offset="0"/>
+                    <GradientStop Color="#26263A" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <DockPanel Margin="10,6,10,12">
+            <!-- Encabezado: se arrastra para mover el widget -->
+            <Grid Name="Encabezado"
+                  DockPanel.Dock="Top"
+                  ColumnDefinitions="*,Auto,Auto"
+                  Background="Transparent"
+                  Cursor="SizeAll"
+                  Margin="4,0,0,6">
+                <TextBlock Text="NovaFolder"
+                           Classes="suave"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           ToolTip.Tip="Arrastra aquí para mover el widget"/>
+                <Button Name="BotonNueva" Grid.Column="1" Classes="nova-icono"
+                        Content="&#xE710;" ToolTip.Tip="Nueva carpeta"/>
+                <Button Name="BotonMas" Grid.Column="2" Classes="nova-icono"
+                        Content="&#xE712;" ToolTip.Tip="Más opciones"/>
+            </Grid>
+
+            <!-- Tras eliminar una carpeta: unos segundos para arrepentirse -->
+            <Border Name="BarraDeshacer"
+                    DockPanel.Dock="Bottom"
+                    IsVisible="False"
+                    Margin="4,8,4,0"
+                    Padding="12,4,4,4"
+                    CornerRadius="10"
+                    Background="{StaticResource NovaTarjeta}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Name="TextoDeshacer"
+                               Classes="suave"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center"/>
+                    <Button Name="BotonDeshacer" Grid.Column="1" Classes="nova-accion"
+                            Content="Deshacer" Padding="10,4"/>
+                </Grid>
+            </Border>
+
+            <Panel>
+                <ScrollViewer Name="Desplazador"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <WrapPanel Name="FoldersPanel" Orientation="Horizontal"/>
+                </ScrollViewer>
+
+                <!-- Sin carpetas: se explica cómo empezar -->
+                <StackPanel Name="Vacio" IsVisible="False" Spacing="10" Margin="8,20,8,16">
+                    <TextBlock Classes="suave"
+                               Text="Crea una carpeta con + o arrastra&#x0a;accesos directos aquí."
+                               TextAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Panel>
+        </DockPanel>
+
+        <!-- Aparece al arrastrar archivos sobre el widget (fuera de una carpeta) -->
+        <Border Name="ZonaNueva"
+                IsVisible="False"
+                IsHitTestVisible="False"
+                Margin="6"
+                CornerRadius="14"
+                BorderThickness="2"
+                BorderBrush="{StaticResource NovaAcento}"
+                Background="{StaticResource NovaAcentoSuave}">
+            <TextBlock Text="Suelta para crear una carpeta nueva"
+                       Foreground="{StaticResource NovaTexto}"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+        </Border>
+    </Panel>
+</Window>

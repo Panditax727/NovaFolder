@@ -1,8 +1,25 @@
+# Compilación
 bin/
 obj/
-publicado/
-*.zip
-*.user
-*.suo
+publish/
+releases/
+artifacts/
+
+# Resultados de pruebas y cobertura
+TestResults/
+coverage/
+*.trx
+
+# Entornos y editores
 .vs/
 .vscode/
+.idea/
+*.user
+*.suo
+*.swp
+.DS_Store
+Thumbs.db
+
+# Varios
+*.zip
+*.log

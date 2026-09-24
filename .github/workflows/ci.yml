@@ -1,0 +1,27 @@
+name: CI
+
+# Compila y ejecuta las pruebas en cada cambio. Un PR con pruebas en rojo
+# no deberia fusionarse.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Compilar
+        run: dotnet build NovaFolder.slnx -c Release
+
+      - name: Pruebas
+        run: dotnet test --solution NovaFolder.slnx -c Release --no-build
