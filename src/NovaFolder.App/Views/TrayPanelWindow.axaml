@@ -1,0 +1,141 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NovaFolder.Views.TrayPanelWindow"
+        Title="NovaFolder"
+        Width="344"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        WindowStartupLocation="Manual"
+        Background="Transparent"
+        Topmost="True">
+
+    <!-- Panel de la bandeja al estilo de los de Windows 11: sube desde el
+         reloj con un fundido (ver OnOpened). -->
+    <Border Name="Tarjeta"
+            Classes="nova-superficie"
+            CornerRadius="12"
+            Opacity="0"
+            RenderTransform="translateY(14px)">
+        <Border.Transitions>
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.15"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2">
+                    <TransformOperationsTransition.Easing>
+                        <CubicEaseOut/>
+                    </TransformOperationsTransition.Easing>
+                </TransformOperationsTransition>
+            </Transitions>
+        </Border.Transitions>
+
+        <StackPanel>
+            <!-- Cabecera -->
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="16,14,10,12">
+                <Image Source="avares://NovaFolder/Assets/NovaFolder.ico" Width="30" Height="30"
+                       RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center" Spacing="1">
+                    <TextBlock Text="NovaFolder" Classes="titulo"/>
+                    <TextBlock Name="Estado" Classes="suave" FontSize="11"/>
+                </StackPanel>
+                <Button Name="BotonAyuda" Grid.Column="2" Classes="nova-icono"
+                        Content="&#xE897;" ToolTip.Tip="Cómo se usa"/>
+            </Grid>
+
+            <!-- Aviso de actualización lista -->
+            <Border Name="BannerActualizacion" IsVisible="False"
+                    Margin="12,0,12,10" Padding="12,8,6,8" CornerRadius="8"
+                    Background="{StaticResource NovaAcentoSuave}">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <TextBlock Classes="glifo" Text="&#xE896;" Foreground="{StaticResource NovaTexto}"/>
+                    <TextBlock Name="TextoActualizacion" Grid.Column="1" Margin="10,0"
+                               Foreground="{StaticResource NovaTexto}" FontSize="12"
+                               TextWrapping="Wrap" VerticalAlignment="Center"/>
+                    <Button Name="BotonReiniciar" Grid.Column="2" Classes="nova-accion"
+                            Content="Reiniciar" Padding="10,4"/>
+                </Grid>
+            </Border>
+
+            <Border Classes="separador"/>
+
+            <!-- Carpetas -->
+            <Grid ColumnDefinitions="*,Auto" Margin="16,10,8,4">
+                <TextBlock Text="TUS CARPETAS" Classes="seccion"/>
+                <Button Name="BotonNueva" Grid.Column="1" Classes="nova-enlace" Content="+ Nueva carpeta"/>
+            </Grid>
+            <WrapPanel Name="Carpetas" Margin="12,0,12,4"/>
+            <TextBlock Name="SinCarpetas" Classes="pista" IsVisible="False" Margin="16,6,16,10"
+                       Text="Aún no tienes carpetas. Crea una y arrastra accesos directos dentro."/>
+            <Button Name="BotonVerTodas" Classes="nova-enlace" IsVisible="False"
+                    HorizontalAlignment="Center" Margin="0,0,0,6"/>
+
+            <Border Classes="separador" Margin="0,6,0,0"/>
+
+            <!-- Ajustes -->
+            <StackPanel Margin="6,6,6,6">
+                <Border Classes="nova-fila">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Classes="glifo" Text="&#xE7F4;"/>
+                        <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="Widget en el Escritorio" Foreground="{StaticResource NovaTexto}" FontSize="13"/>
+                            <TextBlock Text="Tus carpetas sobre el fondo de pantalla" Classes="suave" FontSize="11"/>
+                        </StackPanel>
+                        <ToggleSwitch Name="InterruptorWidget" Grid.Column="2" Classes="compacto"/>
+                    </Grid>
+                </Border>
+                <Border Classes="nova-fila">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Classes="glifo" Text="&#xEA99;"/>
+                        <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="Limpiar el Escritorio" Foreground="{StaticResource NovaTexto}" FontSize="13"/>
+                            <TextBlock Text="Lo que metes en una carpeta sale del Escritorio" Classes="suave" FontSize="11" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ToggleSwitch Name="InterruptorLimpiar" Grid.Column="2" Classes="compacto"/>
+                    </Grid>
+                </Border>
+                <Button Name="BotonGuardarPendientes" Classes="nova-enlace" IsVisible="False"
+                        Margin="34,-4,8,4" HorizontalAlignment="Left">
+                    <Button.ContentTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+                        </DataTemplate>
+                    </Button.ContentTemplate>
+                </Button>
+                <Border Classes="nova-fila">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Classes="glifo" Text="&#xE823;"/>
+                        <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                            <TextBlock Text="Iniciar con Windows" Foreground="{StaticResource NovaTexto}" FontSize="13"/>
+                            <TextBlock Text="NovaFolder se abre al encender el equipo" Classes="suave" FontSize="11"/>
+                        </StackPanel>
+                        <ToggleSwitch Name="InterruptorInicio" Grid.Column="2" Classes="compacto"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <Border Classes="separador"/>
+
+            <!-- Pie -->
+            <Grid ColumnDefinitions="*,*,*" Margin="6">
+                <Button Name="BotonActualizar" Classes="nova-pie">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="glifo" Text="&#xE895;" HorizontalAlignment="Center" Foreground="{Binding $parent[Button].Foreground}"/>
+                        <TextBlock Name="TextoBotonActualizar" Text="Actualizar" FontSize="11" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Name="BotonDatos" Grid.Column="1" Classes="nova-pie" ToolTip.Tip="Configuración y registros de errores">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="glifo" Text="&#xE8B7;" HorizontalAlignment="Center" Foreground="{Binding $parent[Button].Foreground}"/>
+                        <TextBlock Text="Datos" FontSize="11" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Name="BotonSalir" Grid.Column="2" Classes="nova-pie" ToolTip.Tip="Cerrar NovaFolder por completo">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="glifo" Text="&#xE7E8;" HorizontalAlignment="Center" Foreground="{Binding $parent[Button].Foreground}"/>
+                        <TextBlock Text="Salir" FontSize="11" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>

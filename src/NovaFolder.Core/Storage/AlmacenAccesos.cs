@@ -57,6 +57,17 @@ namespace NovaFolder.Core.Storage
             return File.Exists(enEscritorio) ? Adoptar(enEscritorio) : rutaGestionada;
         }
 
+        // Devuelve un acceso del almacén al Escritorio y dice dónde quedó.
+        // Si no es del almacén no se toca y se devuelve la misma ruta.
+        public string Devolver(string rutaGestionada)
+        {
+            if (!EsGestionado(rutaGestionada) || !File.Exists(rutaGestionada)) return rutaGestionada;
+
+            var destino = RutaLibre(_rutas.Escritorio, Path.GetFileName(rutaGestionada));
+            File.Move(rutaGestionada, destino);
+            return destino;
+        }
+
         // Devuelve al Escritorio todo lo del almacén que ya no usa ninguna
         // carpeta (se quitó, se eliminó la carpeta, se editó el JSON...).
         public void Barrer(IEnumerable<string> enUso)
@@ -73,6 +84,8 @@ namespace NovaFolder.Core.Storage
                 }
             }
         }
+
+        public bool PuedeAdoptarse(string ruta) => EsAccesoDelEscritorio(ruta) && File.Exists(ruta);
 
         private bool EsAccesoDelEscritorio(string ruta)
         {

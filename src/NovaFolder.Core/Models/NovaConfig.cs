@@ -15,8 +15,17 @@ namespace NovaFolder.Core.Models
         public bool StartWithWindows { get; set; } = true;
 
         // Al agregar un acceso directo del Escritorio, sacarlo de ahí (ver
-        // AlmacenAccesos). Apagado por defecto: mover archivos del usuario
-        // tiene que ser una decisión suya.
+        // AlmacenAccesos). Es el objetivo de la app, pero mover archivos del
+        // usuario tiene que ser decisión suya: se confirma en la bienvenida.
         public bool CleanDesktop { get; set; }
+
+        // El widget se ocultó desde la bandeja: sigue oculto tras reiniciar.
+        public bool ShowWidget { get; set; } = true;
+
+        // Ya vio la bienvenida guiada (se muestra una sola vez).
+        public bool WelcomeSeen { get; set; }
+
+        // Ya se le explicó que al ocultar el widget la app sigue en la bandeja.
+        public bool TrayHintShown { get; set; }
     }
 }

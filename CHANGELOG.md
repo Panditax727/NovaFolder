@@ -15,7 +15,12 @@ Primera versión instalable.
 - Gestionar carpetas sin editar archivos: crear, renombrar, eliminar (con **Deshacer**), agregar, quitar, mover y reordenar elementos.
 - Arrastrar y soltar: sobre las carpetas del widget, sobre sus íconos en el Escritorio y dentro de una carpeta abierta.
 - Buscador en carpetas con 9 o más elementos.
-- Opción «Quitar del Escritorio al agregar» para dejar el Escritorio limpio.
+- «Limpiar el Escritorio»: lo que metes en una carpeta sale del Escritorio y vuelve si lo quitas. Viene activado en instalaciones nuevas, y se ofrece guardar los accesos que ya estaban en carpetas.
+- Sacar elementos de una carpeta arrastrándolos al Escritorio o al Explorador, o con «Devolver al Escritorio».
+- Panel de la bandeja al estilo de Windows 11: tus carpetas, interruptores de ajustes, actualizaciones, datos y salir.
+- Bienvenida guiada de 4 pasos la primera vez; se puede volver a ver con el botón **?**.
+- Avisos junto a la bandeja cuando el widget está oculto (por ejemplo, la primera vez que se oculta o cuando hay una actualización).
+- El widget recuerda si estaba oculto.
 - Registro de errores en `%APPDATA%\NovaFolder\logs`.
 - Ícono propio de la aplicación.
 

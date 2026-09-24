@@ -26,9 +26,11 @@ namespace NovaFolder.Services.Windows
 
         // Caso del ícono de la bandeja: vive abajo a la derecha, así que el
         // menú se despliega hacia arriba y centrado en el puntero.
-        public static void ColocarSobreElPuntero(Window ventana, int margen)
+        // punto: dónde estaba el puntero al hacer clic (se lee una vez al
+        // abrir, para que el panel no persiga al ratón al cambiar de tamaño).
+        public static void ColocarSobreElPuntero(Window ventana, int margen, PixelPoint? punto = null)
         {
-            var puntero = Posicion();
+            var puntero = punto ?? Posicion();
             if (puntero == null || !Medir(ventana, puntero.Value, out var ancho, out var alto, out var area)) return;
 
             int x = puntero.Value.X - ancho / 2;

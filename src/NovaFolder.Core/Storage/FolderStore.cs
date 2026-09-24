@@ -71,6 +71,8 @@ namespace NovaFolder.Core.Storage
 
         public IReadOnlyList<AppFolder> Folders => _config.Folders;
 
+        public string Escritorio => _escritorio;
+
         // Los nombres se comparan sin distinguir mayúsculas: cada carpeta
         // acaba siendo un "Nombre.lnk" en el Escritorio, y en Windows
         // "Juegos.lnk" y "juegos.lnk" son el mismo archivo.
@@ -180,6 +182,64 @@ namespace NovaFolder.Core.Storage
             if (alguno) Confirmar();
         }
 
+        // "Sacar al Escritorio": el elemento deja la carpeta y, si NovaFolder
+        // lo tenía guardado en su almacén, el archivo vuelve al Escritorio.
+        // Si nunca salió de su sitio (modo sin limpiar) solo se quita.
+        public void SacarAlEscritorio(AppFolder carpeta, AppShortcut app)
+        {
+            Exigir(carpeta);
+            if (!carpeta.Apps.Contains(app)) return;
+
+            try { _almacen.Devolver(app.Path); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                throw new ConfiguracionException($"No se pudo devolver «{app.Name}» al Escritorio: {ex.Message}", ex);
+            }
+            carpeta.Apps.Remove(app);
+            Confirmar();
+        }
+
+        // Tras arrastrar un elemento fuera de la app: si el Explorador movió
+        // el archivo a otro sitio, ya no está donde la carpeta lo esperaba y
+        // se quita (si no, quedaría como acceso roto). Devuelve si se quitó.
+        public bool QuitarSiYaNoExiste(AppFolder carpeta, AppShortcut app)
+        {
+            if (!_config.Folders.Contains(carpeta) || !carpeta.Apps.Contains(app)) return false;
+            if (File.Exists(app.Path) || Directory.Exists(app.Path)) return false;
+
+            carpeta.Apps.Remove(app);
+            Confirmar();
+            return true;
+        }
+
+        public bool EsGestionado(AppShortcut app) => _almacen.EsGestionado(app.Path);
+
+        // Accesos que ya estaban en carpetas antes de activar "Limpiar el
+        // Escritorio" y siguen ahí. No se mueven solos: el usuario lo pide.
+        public int ContarAccesosEnEscritorio() =>
+            _config.Folders.SelectMany(f => f.Apps).Count(a => _almacen.PuedeAdoptarse(a.Path));
+
+        // Los guarda en el almacén (salen del Escritorio). Devuelve cuántos.
+        public int GuardarAccesosDelEscritorio()
+        {
+            int n = 0;
+            foreach (var carpeta in _config.Folders)
+            {
+                for (int i = 0; i < carpeta.Apps.Count; i++)
+                {
+                    var ruta = carpeta.Apps[i].Path;
+                    if (!_almacen.PuedeAdoptarse(ruta)) continue;
+
+                    var nueva = _almacen.Adoptar(ruta);
+                    if (nueva == ruta) continue;   // no se pudo mover: se queda como está
+                    carpeta.Apps[i] = ShortcutResolver.Crear(nueva, _escritorio);
+                    n++;
+                }
+            }
+            if (n > 0) Confirmar();
+            return n;
+        }
+
         public void MoverElemento(AppShortcut app, AppFolder desde, AppFolder hacia)
         {
             Exigir(desde);
@@ -218,6 +278,9 @@ namespace NovaFolder.Core.Storage
 
         public bool StartWithWindows => _config.StartWithWindows;
         public bool CleanDesktop => _config.CleanDesktop;
+        public bool ShowWidget => _config.ShowWidget;
+        public bool WelcomeSeen => _config.WelcomeSeen;
+        public bool TrayHintShown => _config.TrayHintShown;
         public (int X, int Y)? PosicionVentana =>
             _config.WindowX is int x && _config.WindowY is int y ? (x, y) : null;
 
@@ -238,6 +301,25 @@ namespace NovaFolder.Core.Storage
         public void EstablecerLimpiarEscritorio(bool activo)
         {
             _config.CleanDesktop = activo;
+            Guardar();
+        }
+
+        public void EstablecerWidgetVisible(bool visible)
+        {
+            if (_config.ShowWidget == visible) return;
+            _config.ShowWidget = visible;
+            Guardar();
+        }
+
+        public void MarcarBienvenidaVista()
+        {
+            _config.WelcomeSeen = true;
+            Guardar();
+        }
+
+        public void MarcarAvisoBandejaMostrado()
+        {
+            _config.TrayHintShown = true;
             Guardar();
         }
 

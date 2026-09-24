@@ -61,9 +61,19 @@
                      PlaceholderText="Buscar en la carpeta…"
                      Margin="0,0,0,8"/>
 
+            <!-- Recordatorio discreto de los gestos: así se descubren sin manual -->
+            <TextBlock Name="Ayuda"
+                       DockPanel.Dock="Bottom"
+                       Classes="pista"
+                       Text="Arrastra para ordenar, o al Escritorio para sacarlo"
+                       ToolTip.Tip="Clic derecho sobre un elemento para más opciones"
+                       Margin="0,10,0,0"/>
+
             <TextBlock Name="Aviso"
                        DockPanel.Dock="Bottom"
                        Classes="error"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
                        IsVisible="False"
                        Margin="0,8,0,0"/>
 

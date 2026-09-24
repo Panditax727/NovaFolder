@@ -19,7 +19,16 @@
         <SolidColorBrush x:Key="NovaTextoSuave" Color="#B3FFFFFF"/>
         <SolidColorBrush x:Key="NovaError" Color="#FF8C8C"/>
 
+        <SolidColorBrush x:Key="NovaSeparador" Color="#1AFFFFFF"/>
+
         <FontFamily x:Key="NovaIconos">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+        <!-- Interruptores con el morado de NovaFolder en vez del color de
+             acento de Windows (que puede ser cualquiera). -->
+        <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#9B7BF0"/>
+        <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#AE93F5"/>
+        <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#8A68E6"/>
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#9B7BF0"/>
     </Application.Resources>
 
     <Application.Styles>
@@ -134,6 +143,84 @@
             <Setter Property="Foreground" Value="{StaticResource NovaTextoSuave}"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
+        <!-- Texto de ayuda discreto (gestos, explicaciones cortas) -->
+        <Style Selector="TextBlock.pista">
+            <Setter Property="Foreground" Value="{StaticResource NovaTextoSuave}"/>
+            <Setter Property="Opacity" Value="0.75"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Encabezado de sección en paneles -->
+        <Style Selector="TextBlock.seccion">
+            <Setter Property="Foreground" Value="{StaticResource NovaTextoSuave}"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="LetterSpacing" Value="0.6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="Border.separador">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource NovaSeparador}"/>
+        </Style>
+
+        <!-- Botón de texto con aspecto de enlace ("+ Nueva carpeta") -->
+        <Style Selector="Button.nova-enlace">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaAcento}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.nova-enlace:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaAcentoSuave}"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+        </Style>
+
+        <!-- Botón del pie de un panel: ícono arriba, texto abajo -->
+        <Style Selector="Button.nova-pie">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTextoSuave}"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="6,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.nova-pie:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaTarjeta}"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+        </Style>
+
+        <!-- Fila de ajuste: ícono, título + descripción, interruptor -->
+        <Style Selector="Border.nova-fila">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.nova-fila:pointerover">
+            <Setter Property="Background" Value="{StaticResource NovaHueco}"/>
+        </Style>
+        <Style Selector="TextBlock.glifo">
+            <Setter Property="FontFamily" Value="{StaticResource NovaIconos}"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaAcento}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Interruptor compacto: sin los textos "On/Off" de Fluent -->
+        <Style Selector="ToggleSwitch.compacto">
+            <Setter Property="OnContent" Value=""/>
+            <Setter Property="OffContent" Value=""/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
         <Style Selector="TextBlock.error">
             <Setter Property="Foreground" Value="{StaticResource NovaError}"/>
             <Setter Property="FontSize" Value="11"/>

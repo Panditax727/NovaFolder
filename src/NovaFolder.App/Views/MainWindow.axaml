@@ -26,7 +26,7 @@
             <!-- Encabezado: se arrastra para mover el widget -->
             <Grid Name="Encabezado"
                   DockPanel.Dock="Top"
-                  ColumnDefinitions="*,Auto,Auto"
+                  ColumnDefinitions="*,Auto,Auto,Auto"
                   Background="Transparent"
                   Cursor="SizeAll"
                   Margin="4,0,0,6">
@@ -37,7 +37,9 @@
                            ToolTip.Tip="Arrastra aquí para mover el widget"/>
                 <Button Name="BotonNueva" Grid.Column="1" Classes="nova-icono"
                         Content="&#xE710;" ToolTip.Tip="Nueva carpeta"/>
-                <Button Name="BotonMas" Grid.Column="2" Classes="nova-icono"
+                <Button Name="BotonAyuda" Grid.Column="2" Classes="nova-icono"
+                        Content="&#xE897;" ToolTip.Tip="Cómo se usa"/>
+                <Button Name="BotonMas" Grid.Column="3" Classes="nova-icono"
                         Content="&#xE712;" ToolTip.Tip="Más opciones"/>
             </Grid>
 
@@ -59,6 +61,14 @@
                 </Grid>
             </Border>
 
+            <!-- Mientras todas las carpetas estén vacías: el gesto clave -->
+            <TextBlock Name="PistaVacias"
+                       DockPanel.Dock="Bottom"
+                       Classes="pista"
+                       IsVisible="False"
+                       Margin="8,8,8,0"
+                       Text="Arrastra accesos directos del Escritorio sobre una carpeta para guardarlos ahí."/>
+
             <Panel>
                 <ScrollViewer Name="Desplazador"
                               HorizontalScrollBarVisibility="Disabled"
@@ -67,11 +77,16 @@
                 </ScrollViewer>
 
                 <!-- Sin carpetas: se explica cómo empezar -->
-                <StackPanel Name="Vacio" IsVisible="False" Spacing="10" Margin="8,20,8,16">
-                    <TextBlock Classes="suave"
-                               Text="Crea una carpeta con + o arrastra&#x0a;accesos directos aquí."
-                               TextAlignment="Center"
-                               HorizontalAlignment="Center"/>
+                <StackPanel Name="Vacio" IsVisible="False" Spacing="12" Margin="12,18,12,14">
+                    <Border Width="56" Height="56" CornerRadius="28" Background="{StaticResource NovaAcentoSuave}"
+                            HorizontalAlignment="Center">
+                        <TextBlock Classes="glifo" Text="&#xE8F4;" FontSize="24" Foreground="{StaticResource NovaTexto}"
+                                   HorizontalAlignment="Center"/>
+                    </Border>
+                    <TextBlock Text="Empieza a ordenar tu Escritorio" Foreground="{StaticResource NovaTexto}"
+                               FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Classes="pista" Text="Crea una carpeta o suelta aquí accesos directos para crear una con ellos."/>
+                    <Button Name="BotonPrimera" Classes="nova-accion" Content="Crear mi primera carpeta"/>
                 </StackPanel>
             </Panel>
         </DockPanel>

@@ -81,6 +81,9 @@ namespace NovaFolder.Core.Storage
                 Version = 2,
                 StartWithWindows = config.StartWithWindows,
                 CleanDesktop = config.CleanDesktop,
+                ShowWidget = config.ShowWidget,
+                WelcomeSeen = config.WelcomeSeen,
+                TrayHintShown = config.TrayHintShown,
                 Window = config.WindowX is int x && config.WindowY is int y ? new VentanaDto { X = x, Y = y } : null,
                 Folders = config.Folders.Select(f => new CarpetaDto
                 {
@@ -135,6 +138,9 @@ namespace NovaFolder.Core.Storage
         {
             StartWithWindows = dto.StartWithWindows ?? true,
             CleanDesktop = dto.CleanDesktop ?? false,
+            ShowWidget = dto.ShowWidget ?? true,
+            WelcomeSeen = dto.WelcomeSeen ?? false,
+            TrayHintShown = dto.TrayHintShown ?? false,
             WindowX = dto.Window?.X,
             WindowY = dto.Window?.Y,
             Folders = (dto.Folders ?? new())
@@ -205,9 +211,12 @@ namespace NovaFolder.Core.Storage
             return resultado;
         }
 
-        // Primera ejecución: una carpeta vacía que invita a arrastrar cosas dentro.
+        // Primera ejecución: una carpeta vacía que invita a arrastrar cosas
+        // dentro, y el Escritorio limpio por defecto (la bienvenida deja
+        // desactivarlo antes de que se mueva nada).
         private static NovaConfig ConfigInicial() => new()
         {
+            CleanDesktop = true,
             Folders = { new AppFolder { Name = "Favoritos" } }
         };
 
@@ -218,6 +227,9 @@ namespace NovaFolder.Core.Storage
             [JsonPropertyName("version")] public int Version { get; set; }
             [JsonPropertyName("startWithWindows")] public bool? StartWithWindows { get; set; }
             [JsonPropertyName("cleanDesktop")] public bool? CleanDesktop { get; set; }
+            [JsonPropertyName("showWidget")] public bool? ShowWidget { get; set; }
+            [JsonPropertyName("welcomeSeen")] public bool? WelcomeSeen { get; set; }
+            [JsonPropertyName("trayHintShown")] public bool? TrayHintShown { get; set; }
             [JsonPropertyName("window")] public VentanaDto? Window { get; set; }
             [JsonPropertyName("folders")] public List<CarpetaDto>? Folders { get; set; }
         }

@@ -34,10 +34,11 @@ namespace NovaFolder
         // basura la destruye y el ícono desaparece de la bandeja sin avisar.
         private TrayIcon? _trayIcon;
 
-        // El menú de bandeja y la carpeta abiertos ahora mismo, si los hay:
-        // nunca se apilan dos a la vez.
-        private TrayMenuWindow? _menuBandeja;
+        // El panel de bandeja, la carpeta y la bienvenida abiertos ahora
+        // mismo, si los hay: nunca se apilan dos del mismo tipo.
+        private TrayPanelWindow? _panelBandeja;
         private FolderPopupWindow? _popup;
+        private BienvenidaWindow? _bienvenida;
 
         public override void Initialize()
         {
@@ -57,15 +58,22 @@ namespace NovaFolder
                 _store.VigilarCambiosExternos();
                 _store.Changed += SincronizarEscritorio;
 
+                // No se asigna como MainWindow del ciclo de vida: Avalonia la
+                // mostraría siempre al arrancar, y el usuario puede haberla
+                // ocultado (vive en la bandeja).
                 _ventana = new MainWindow(_store, AbrirCarpeta);
-                desktop.MainWindow = _ventana;
+                _ventana.AyudaPedida += MostrarBienvenida;
+                _ventana.OcultarPedido += OcultarWidget;
+                if (_store.ShowWidget) _ventana.Show();
 
                 _store.ErrorDeGuardado += mensaje =>
                     Dispatcher.UIThread.Post(() => _ventana.MostrarAviso(mensaje));
 
                 _actualizaciones = new UpdateService();
                 _actualizaciones.ActualizacionLista += version => Dispatcher.UIThread.Post(() =>
-                    _ventana.MostrarAviso($"NovaFolder {version} está lista", "Reiniciar", _actualizaciones.ReiniciarEInstalar));
+                    Avisar($"NovaFolder {version} está lista",
+                        "Se instalará sola la próxima vez que se inicie, o ahora mismo si reinicias.",
+                        "Reiniciar", _actualizaciones.ReiniciarEInstalar));
                 _actualizaciones.Iniciar();
 
                 desktop.Exit += (_, _) =>
@@ -94,6 +102,8 @@ namespace NovaFolder
                 var args = desktop.Args ?? Array.Empty<string>();
                 if (args.Length > 0)
                     Dispatcher.UIThread.Post(() => ProcesarArgumentos(args), DispatcherPriority.Background);
+                else if (!_store.WelcomeSeen)
+                    Dispatcher.UIThread.Post(MostrarBienvenida, DispatcherPriority.Background);
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -185,8 +195,82 @@ namespace NovaFolder
 
         private void MostrarWidget()
         {
+            _store.EstablecerWidgetVisible(true);
             _ventana.Show();
             _ventana.Activate();
+        }
+
+        // Ocultar no es cerrar: NovaFolder sigue en la bandeja. La primera
+        // vez se explica, porque si no parece que la app se cerró.
+        private void OcultarWidget()
+        {
+            _ventana.Hide();
+            _store.EstablecerWidgetVisible(false);
+
+            if (_store.TrayHintShown) return;
+            _store.MarcarAvisoBandejaMostrado();
+            new NotificacionWindow(
+                "NovaFolder sigue aquí",
+                "Tus carpetas están en el ícono morado junto al reloj (si no lo ves, pulsa la flecha ^).",
+                "Mostrar el widget", MostrarWidget).Show();
+        }
+
+        private void MostrarBienvenida()
+        {
+            if (_bienvenida != null)
+            {
+                _bienvenida.Activate();
+                return;
+            }
+
+            // La primera vez se recomienda limpiar; al volver a verla, se
+            // muestra lo que el usuario ya tiene elegido.
+            bool limpiar = !_store.WelcomeSeen || _store.CleanDesktop;
+            var bienvenida = new BienvenidaWindow(limpiar, _store.StartWithWindows);
+            bienvenida.Closed += (_, _) =>
+            {
+                _bienvenida = null;
+                if (bienvenida.Resultado is { } elegido)
+                {
+                    EstablecerLimpiarEscritorio(elegido.LimpiarEscritorio);
+                    _store.EstablecerAutoinicio(elegido.IniciarConWindows);
+                    AplicarAutoinicio();
+                    if (!_ventana.IsVisible) MostrarWidget();
+                }
+                _store.MarcarBienvenidaVista();
+            };
+            _bienvenida = bienvenida;
+            bienvenida.Show();
+        }
+
+        // Activar "Limpiar" no mueve nada que ya estuviera en el Escritorio:
+        // se ofrece, y el usuario decide.
+        private void EstablecerLimpiarEscritorio(bool activo)
+        {
+            _store.EstablecerLimpiarEscritorio(activo);
+            if (!activo) return;
+
+            int pendientes = _store.ContarAccesosEnEscritorio();
+            if (pendientes == 0) return;
+            Avisar(pendientes == 1 ? "1 acceso de tus carpetas sigue en el Escritorio"
+                                   : $"{pendientes} accesos de tus carpetas siguen en el Escritorio",
+                "Guárdalos para dejarlo limpio. Si los quitas de la carpeta, vuelven solos.",
+                "Guardarlos", GuardarAccesosDelEscritorio);
+        }
+
+        private void GuardarAccesosDelEscritorio()
+        {
+            int n = _store.GuardarAccesosDelEscritorio();
+            Avisar(n == 1 ? "1 acceso guardado" : $"{n} accesos guardados",
+                "Salieron del Escritorio y siguen en sus carpetas.");
+        }
+
+        // Un aviso donde el usuario lo vaya a ver: en el widget si está a la
+        // vista, o junto a la bandeja si está oculto.
+        private void Avisar(string titulo, string mensaje, string? textoAccion = null, Action? accion = null)
+        {
+            if (_ventana.IsVisible) _ventana.MostrarAviso(titulo, textoAccion, accion);
+            else new NotificacionWindow(titulo, mensaje, textoAccion, accion).Show();
         }
 
         // ---- integración con Windows ----
@@ -216,73 +300,53 @@ namespace NovaFolder
 
         // ---- bandeja del sistema ----
 
-        // Sin barra de tareas ni bordes, este ícono es la forma que tiene el
-        // usuario de recuperar el widget si lo ocultó, o de cerrar NovaFolder.
-        //
-        // Deliberadamente NO se asigna TrayIcon.Menu: el menú nativo de
-        // Avalonia 12 se cierra solo antes de poder elegir nada (ver
-        // TrayMenuWindow para el detalle). En su lugar, un clic en el ícono
-        // abre nuestro propio menú, que sí se puede usar.
+        // Sin barra de tareas, este ícono es la puerta a NovaFolder cuando el
+        // widget está oculto: un clic abre el panel (TrayPanelWindow).
         private void ConfigurarBandeja(IClassicDesktopStyleApplicationLifetime desktop)
         {
             _trayIcon = new TrayIcon
             {
                 Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://NovaFolder/Assets/NovaFolder.ico"))),
-                ToolTipText = $"NovaFolder {_actualizaciones.VersionActual}",
+                ToolTipText = "NovaFolder: clic para ver tus carpetas y ajustes",
                 IsVisible = true
             };
 
-            _trayIcon.Clicked += (_, _) => AbrirMenuBandeja(desktop);
+            _trayIcon.Clicked += (_, _) => AlternarPanelBandeja(desktop);
         }
 
-        private void AbrirMenuBandeja(IClassicDesktopStyleApplicationLifetime desktop)
+        private void AlternarPanelBandeja(IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Un solo menú a la vez: si ya hay uno abierto, el clic lo cierra.
-            if (_menuBandeja != null)
+            // Un solo panel a la vez: si ya hay uno abierto, el clic lo cierra.
+            if (_panelBandeja != null)
             {
-                _menuBandeja.Close();
+                _panelBandeja.Close();
                 return;
             }
 
-            var opciones = new List<TrayMenuWindow.Opcion>
-            {
-                new("Nueva carpeta", () => _ventana.NuevaCarpeta()),
-                _ventana.IsVisible
-                    ? new("Ocultar widget", () => _ventana.Hide())
-                    : new("Mostrar widget", MostrarWidget),
-                TrayMenuWindow.Opcion.Separador,
-                new("Iniciar con Windows", () =>
+            var acciones = new AccionesBandeja(
+                AbrirCarpeta: (carpeta, ancla) => AbrirCarpeta(carpeta, ancla, false),
+                NuevaCarpeta: () => _ventana.NuevaCarpeta(),
+                WidgetVisible: () => _ventana.IsVisible,
+                MostrarWidget: visible => { if (visible) MostrarWidget(); else OcultarWidget(); },
+                Autoinicio: activo =>
                 {
-                    _store.EstablecerAutoinicio(!_store.StartWithWindows);
+                    _store.EstablecerAutoinicio(activo);
                     AplicarAutoinicio();
-                }, Marcada: _store.StartWithWindows),
-                new("Quitar del Escritorio al agregar",
-                    () => _store.EstablecerLimpiarEscritorio(!_store.CleanDesktop),
-                    Marcada: _store.CleanDesktop),
-                TrayMenuWindow.Opcion.Separador,
-                _actualizaciones.VersionLista is string lista
-                    ? new($"Reiniciar para actualizar a {lista}", _actualizaciones.ReiniciarEInstalar)
-                    : new("Buscar actualizaciones", () => _ = BuscarActualizacionesAsync()),
-                new("Carpeta de datos y registros", () => AppLauncherService.Lanzar(_rutas.Datos)),
-                new($"Acerca de · versión {_actualizaciones.VersionActual}",
-                    () => AppLauncherService.Lanzar(UpdateService.RepositorioGitHub)),
-                TrayMenuWindow.Opcion.Separador,
-                new("Salir", () => desktop.Shutdown())
-            };
+                },
+                LimpiarEscritorio: EstablecerLimpiarEscritorio,
+                GuardarAccesosDelEscritorio: GuardarAccesosDelEscritorio,
+                BuscarActualizaciones: _actualizaciones.BuscarAsync,
+                ReiniciarParaActualizar: _actualizaciones.ReiniciarEInstalar,
+                Version: _actualizaciones.VersionActual,
+                VersionLista: () => _actualizaciones.VersionLista,
+                MostrarAyuda: MostrarBienvenida,
+                AbrirDatos: () => AppLauncherService.Lanzar(_rutas.Datos),
+                Salir: () => desktop.Shutdown());
 
-            var menu = new TrayMenuWindow(opciones);
-            _menuBandeja = menu;
-            menu.Closed += (_, _) => { if (ReferenceEquals(_menuBandeja, menu)) _menuBandeja = null; };
-            menu.Show();
-        }
-
-        private async Task BuscarActualizacionesAsync()
-        {
-            MostrarWidget();
-            _ventana.MostrarAviso("Buscando actualizaciones…");
-            var mensaje = await _actualizaciones.BuscarAsync();
-            // Si encontró una, ActualizacionLista ya puso el aviso con "Reiniciar".
-            if (_actualizaciones.VersionLista == null) _ventana.MostrarAviso(mensaje);
+            var panel = new TrayPanelWindow(_store, acciones);
+            _panelBandeja = panel;
+            panel.Closed += (_, _) => { if (ReferenceEquals(_panelBandeja, panel)) _panelBandeja = null; };
+            panel.Show();
         }
     }
 }

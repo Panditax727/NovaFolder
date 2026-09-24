@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
@@ -13,7 +14,22 @@ namespace NovaFolder.Controls
 {
     // Un elemento que el usuario está arrastrando desde una carpeta abierta:
     // qué es y de dónde sale, para poder reordenarlo o moverlo a otra.
-    public sealed record ElementoArrastrado(AppFolder Carpeta, AppShortcut App);
+    public sealed class ElementoArrastrado
+    {
+        public ElementoArrastrado(AppFolder carpeta, AppShortcut app)
+        {
+            Carpeta = carpeta;
+            App = app;
+        }
+
+        public AppFolder Carpeta { get; }
+        public AppShortcut App { get; }
+
+        // Lo recibió una ventana de NovaFolder (reordenar, mover a otra
+        // carpeta). Si queda en false y hubo efecto, lo recibió otra app:
+        // el Escritorio o el Explorador.
+        public bool SoltadoDentro { get; set; }
+    }
 
     // Comportamientos que comparten las tarjetas de carpeta, los elementos
     // del popup y las ventanas. Se escriben una vez aquí para que todo
@@ -69,9 +85,19 @@ namespace NovaFolder.Controls
         }
 
         // Permite arrastrar el control (un elemento del popup) para soltarlo
-        // en otra posición de su carpeta o sobre otra carpeta del widget.
+        // en otra posición de su carpeta, sobre otra carpeta del widget, o
+        // fuera de NovaFolder: en el Escritorio o en el Explorador.
+        //
+        // Viaja con dos formatos: el interno (para las ventanas de NovaFolder)
+        // y el archivo real (CF_HDROP), que es lo que entiende Windows.
+        // efectos: qué puede hacer el destino externo con el archivo.
+        // alTerminar: recibe el elemento y el efecto final, para actualizar la carpeta.
         // Se combina con AlActivar: si el ratón no se mueve, sigue siendo clic.
-        public static void HacerArrastrable(Border control, Func<ElementoArrastrado> datos)
+        public static void HacerArrastrable(
+            Border control,
+            Func<ElementoArrastrado> datos,
+            Func<ElementoArrastrado, DragDropEffects> efectos,
+            Action<ElementoArrastrado, DragDropEffects> alTerminar)
         {
             PointerPressedEventArgs? pulsacion = null;
             Point inicio = default;
@@ -98,13 +124,20 @@ namespace NovaFolder.Controls
                 control.Classes.Add("arrastrando");
                 try
                 {
+                    var elemento = datos();
+                    var item = new DataTransferItem();
+                    item.Set(FormatoElemento, elemento);
+                    if (await ArchivoDe(control, elemento.App.Path) is IStorageItem archivo)
+                        item.SetFile(archivo);
+
                     var transferencia = new DataTransfer();
-                    transferencia.Add(DataTransferItem.Create(FormatoElemento, datos()));
-                    await DragDrop.DoDragDropAsync(disparador, transferencia, DragDropEffects.Move);
+                    transferencia.Add(item);
+                    var efecto = await DragDrop.DoDragDropAsync(disparador, transferencia, efectos(elemento));
+                    alTerminar(elemento, efecto);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException or IOException)
                 {
-                    Log.Advertencia($"Error al arrastrar: {ex.Message}");
+                    Log.Error("Error al arrastrar un elemento.", ex);
                 }
                 finally
                 {
@@ -147,13 +180,26 @@ namespace NovaFolder.Controls
                 if (!Acepta(e)) return;
                 e.Handled = true;
 
-                if (ElementoDe(e) is ElementoArrastrado elemento) alSoltarElemento?.Invoke(elemento);
+                if (ElementoDe(e) is ElementoArrastrado elemento)
+                {
+                    elemento.SoltadoDentro = true;
+                    alSoltarElemento?.Invoke(elemento);
+                }
                 else
                 {
                     var rutas = RutasDe(e);
                     if (rutas.Count > 0) alSoltarArchivos(rutas);
                 }
             });
+        }
+
+        private static async System.Threading.Tasks.Task<IStorageItem?> ArchivoDe(Visual control, string ruta)
+        {
+            var almacenamiento = TopLevel.GetTopLevel(control)?.StorageProvider;
+            if (almacenamiento == null) return null;
+            return Directory.Exists(ruta)
+                ? await almacenamiento.TryGetFolderFromPathAsync(ruta)
+                : File.Exists(ruta) ? await almacenamiento.TryGetFileFromPathAsync(ruta) : null;
         }
 
         public static bool HayArchivos(DragEventArgs e) => e.DataTransfer.Contains(DataFormat.File);

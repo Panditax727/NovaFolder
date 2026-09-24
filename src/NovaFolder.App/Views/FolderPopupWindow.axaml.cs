@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -174,7 +175,7 @@ namespace NovaFolder.Views
                 var tile = new AppTile(app, CrearMenuElemento(app));
                 tile.AbrirPedido += t => Lanzar(t.App);
 
-                Interacciones.HacerArrastrable(tile, () => new ElementoArrastrado(_folder, app));
+                Interacciones.HacerArrastrable(tile, () => new ElementoArrastrado(_folder, app), EfectosAlSacar, AlTerminarArrastre);
                 Interacciones.AceptarSoltar(tile,
                     rutas => Agregar(rutas, indice),
                     elemento => Recolocar(elemento, indice),
@@ -186,6 +187,7 @@ namespace NovaFolder.Views
             var hay = _folder.Apps.Count > 0;
             Vacia.IsVisible = !hay;
             Desplazador.IsVisible = hay;
+            Ayuda.IsVisible = hay;
             Buscador.IsVisible = _folder.Apps.Count >= UmbralBuscador;
             Filtrar();
         }
@@ -236,6 +238,39 @@ namespace NovaFolder.Views
             else _store.MoverElemento(elemento.App, elemento.Carpeta, _folder);
         });
 
+        // Qué puede hacer Windows con el archivo si se suelta fuera de la app.
+        // Nunca se permite mover lo que podría romper algo: el .exe de un
+        // juego fuera de su carpeta, o una carpeta entera de otro sitio.
+        private DragDropEffects EfectosAlSacar(ElementoArrastrado elemento)
+        {
+            var ruta = elemento.App.Path;
+            if (_store.EsGestionado(elemento.App)) return DragDropEffects.Move;   // nuestra copia: vuelve tal cual
+            if (EstaEnEscritorio(ruta)) return DragDropEffects.Move;              // ya vive ahí: no se duplica
+            if (Directory.Exists(ruta) || EsPrograma(ruta)) return DragDropEffects.Link;
+            return DragDropEffects.Copy | DragDropEffects.Link;                    // un documento: se copia
+        }
+
+        // Se soltó fuera de NovaFolder: si el archivo se movió, o si era uno
+        // del Escritorio que se soltó en el Escritorio, sale de la carpeta.
+        private void AlTerminarArrastre(ElementoArrastrado elemento, DragDropEffects efecto) => Intentar(() =>
+        {
+            if (elemento.SoltadoDentro || efecto == DragDropEffects.None) return;
+
+            bool salio = _store.QuitarSiYaNoExiste(elemento.Carpeta, elemento.App);
+            if (!salio && EstaEnEscritorio(elemento.App.Path))
+            {
+                _store.QuitarElemento(elemento.Carpeta, elemento.App);
+                salio = true;
+            }
+            if (salio) MostrarAviso($"«{elemento.App.Name}» salió de la carpeta.", esError: false);
+        });
+
+        private bool EstaEnEscritorio(string ruta) =>
+            string.Equals(Path.GetDirectoryName(ruta), _store.Escritorio, StringComparison.OrdinalIgnoreCase);
+
+        private static bool EsPrograma(string ruta) =>
+            Path.GetExtension(ruta).Equals(".exe", StringComparison.OrdinalIgnoreCase);
+
         // Los errores esperables (validación, carpeta que ya no existe) se
         // muestran en la propia tarjeta; los inesperados van al manejador
         // global, que los registra.
@@ -281,10 +316,13 @@ namespace NovaFolder.Views
             }
         }
 
-        private void MostrarAviso(string? texto)
+        // esError: rojo para problemas; neutro para confirmaciones.
+        private void MostrarAviso(string? texto, bool esError = true)
         {
             Aviso.Text = texto;
             Aviso.IsVisible = !string.IsNullOrEmpty(texto);
+            Aviso.Classes.Set("error", esError);
+            Aviso.Classes.Set("suave", !esError);
         }
 
         // ---- menús ----
@@ -315,7 +353,15 @@ namespace NovaFolder.Views
                     }),
                     mover,
                     new Separator(),
-                    Interacciones.Opcion("Quitar de la carpeta", "\uE711", () => Intentar(() => _store.QuitarElemento(_folder, app)))
+                    // Si NovaFolder lo sac\u00F3 del Escritorio, "quitar" es devolverlo;
+                    // si nunca sali\u00F3 de su sitio, solo deja de estar en la carpeta.
+                    _store.EsGestionado(app)
+                        ? Interacciones.Opcion("Devolver al Escritorio", "\uE8A0", () => Intentar(() =>
+                        {
+                            _store.SacarAlEscritorio(_folder, app);
+                            MostrarAviso($"\u00AB{app.Name}\u00BB volvi\u00F3 al Escritorio.", esError: false);
+                        }))
+                        : Interacciones.Opcion("Quitar de la carpeta", "\uE711", () => Intentar(() => _store.QuitarElemento(_folder, app)))
                 }
             };
             BloquearMientrasEsteAbierto(menu);

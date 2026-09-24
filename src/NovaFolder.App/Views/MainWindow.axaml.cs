@@ -39,6 +39,11 @@ namespace NovaFolder.Views
         private readonly DispatcherTimer _ocultarDeshacer = new() { Interval = TimeSpan.FromSeconds(7) };
         private Action? _deshacer;
 
+        // Los decide App: mostrar la bienvenida, y ocultar el widget
+        // recordándolo y avisando la primera vez de que sigue en la bandeja.
+        public event Action? AyudaPedida;
+        public event Action? OcultarPedido;
+
         public MainWindow() => InitializeComponent();
 
         // abrirCarpeta(carpeta, ancla, empezarRenombrando)
@@ -64,6 +69,8 @@ namespace NovaFolder.Views
             _store.Changed += Reconstruir;
 
             BotonNueva.Click += (_, _) => NuevaCarpeta();
+            BotonPrimera.Click += (_, _) => NuevaCarpeta();
+            BotonAyuda.Click += (_, _) => AyudaPedida?.Invoke();
             BotonMas.Flyout = CrearMenuMas();
             BotonDeshacer.Click += (_, _) =>
             {
@@ -108,7 +115,7 @@ namespace NovaFolder.Views
             {
                 if (e.CloseReason is WindowCloseReason.ApplicationShutdown or WindowCloseReason.OSShutdown) return;
                 e.Cancel = true;
-                Hide();
+                OcultarPedido?.Invoke();
             };
         }
 
@@ -129,6 +136,7 @@ namespace NovaFolder.Views
             }
 
             Vacio.IsVisible = _store.Folders.Count == 0;
+            PistaVacias.IsVisible = _store.Folders.Count > 0 && _store.Folders.All(f => f.Apps.Count == 0);
         }
 
         private FolderTile? TileDe(AppFolder folder) =>
@@ -248,7 +256,8 @@ namespace NovaFolder.Views
             Items =
             {
                 Interacciones.Opcion("Nueva carpeta", "\uE8F4", () => NuevaCarpeta()),
-                Interacciones.Opcion("Ocultar widget", "\uED1A", Hide),
+                Interacciones.Opcion("C\u00F3mo se usa", "\uE897", () => AyudaPedida?.Invoke()),
+                Interacciones.Opcion("Ocultar widget (sigue en la bandeja)", "\uED1A", () => OcultarPedido?.Invoke()),
                 new Separator(),
                 Interacciones.Opcion("Salir de NovaFolder", "\uE7E8", () =>
                     (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown())

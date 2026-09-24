@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NovaFolder.Views.NotificacionWindow"
+        Title="NovaFolder"
+        Width="340"
+        SizeToContent="Height"
+        CanResize="False"
+        WindowDecorations="None"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        WindowStartupLocation="Manual"
+        Background="Transparent"
+        Topmost="True">
+
+    <!-- Aviso breve junto a la bandeja. No roba el foco (ShowActivated) y
+         se va solo. Un clic en él hace la acción; la X lo descarta. -->
+    <Border Name="Tarjeta" Classes="nova-superficie" CornerRadius="12" Padding="14,12,8,12"
+            Opacity="0" RenderTransform="translateX(24px)" Cursor="Hand">
+        <Border.Transitions>
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.18"/>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22">
+                    <TransformOperationsTransition.Easing>
+                        <CubicEaseOut/>
+                    </TransformOperationsTransition.Easing>
+                </TransformOperationsTransition>
+            </Transitions>
+        </Border.Transitions>
+
+        <Grid ColumnDefinitions="Auto,*,Auto">
+            <Image Source="avares://NovaFolder/Assets/NovaFolder.ico" Width="28" Height="28" VerticalAlignment="Top"
+                   RenderOptions.BitmapInterpolationMode="HighQuality"/>
+            <StackPanel Grid.Column="1" Margin="12,0,6,0" Spacing="3">
+                <TextBlock Name="Titulo" Foreground="{StaticResource NovaTexto}" FontWeight="SemiBold" FontSize="13"/>
+                <TextBlock Name="Mensaje" Classes="suave" FontSize="12" TextWrapping="Wrap"/>
+                <Button Name="BotonAccion" Classes="nova-enlace" IsVisible="False" Margin="-8,4,0,0" Padding="8,3"/>
+            </StackPanel>
+            <Button Name="BotonCerrar" Grid.Column="2" Classes="nova-icono" Content="&#xE711;" FontSize="10"
+                    VerticalAlignment="Top" ToolTip.Tip="Descartar"/>
+        </Grid>
+    </Border>
+</Window>

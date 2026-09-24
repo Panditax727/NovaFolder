@@ -247,6 +247,7 @@ namespace NovaFolder.Core.Tests
         {
             using var entorno = new EntornoPrueba();
             using var store = entorno.CrearStore();
+            store.EstablecerLimpiarEscritorio(false);
             var carpeta = store.CrearCarpeta("Juegos");
             var enEscritorio = entorno.EnEscritorio("Steam.lnk");
 
@@ -272,5 +273,95 @@ namespace NovaFolder.Core.Tests
             Assert.False(File.Exists(enEscritorio));          // y se recuperó
             Assert.True(File.Exists(carpeta.Apps[0].Path));
         }
-    }
+    
+        // ---------- Sacar de la carpeta ----------
+
+        [Fact]
+        public void Sacar_al_Escritorio_devuelve_el_acceso_guardado()
+        {
+            using var entorno = new EntornoPrueba();
+            using var store = entorno.CrearStore();
+            store.EstablecerLimpiarEscritorio(true);
+            var carpeta = store.CrearCarpeta("Juegos");
+            var enEscritorio = entorno.EnEscritorio("Steam.lnk");
+            var app = store.AgregarElementos(carpeta, new[] { enEscritorio }).Agregados[0];
+            Assert.True(store.EsGestionado(app));
+
+            store.SacarAlEscritorio(carpeta, app);
+
+            Assert.Empty(carpeta.Apps);
+            Assert.True(File.Exists(enEscritorio));
+            Assert.False(File.Exists(app.Path));
+        }
+
+        [Fact]
+        public void Sacar_al_Escritorio_sin_limpiar_solo_lo_quita_de_la_carpeta()
+        {
+            using var entorno = new EntornoPrueba();
+            using var store = entorno.CrearStore();
+            store.EstablecerLimpiarEscritorio(false);
+            var carpeta = store.CrearCarpeta("Juegos");
+            var archivo = entorno.Archivo("informe.pdf");
+            var app = store.AgregarElementos(carpeta, new[] { archivo }).Agregados[0];
+
+            store.SacarAlEscritorio(carpeta, app);
+
+            Assert.Empty(carpeta.Apps);
+            Assert.True(File.Exists(archivo));   // nunca se movió, sigue donde estaba
+        }
+
+        [Fact]
+        public void Quitar_si_ya_no_existe_solo_quita_lo_que_se_movio()
+        {
+            using var entorno = new EntornoPrueba();
+            using var store = entorno.CrearStore();
+            var carpeta = store.CrearCarpeta("Juegos");
+            var apps = store.AgregarElementos(carpeta, new[] { entorno.Archivo("A.lnk"), entorno.Archivo("B.lnk") }).Agregados;
+            File.Move(apps[0].Path, apps[0].Path + ".movido");   // como si el Explorador lo hubiera movido
+
+            Assert.True(store.QuitarSiYaNoExiste(carpeta, apps[0]));
+            Assert.False(store.QuitarSiYaNoExiste(carpeta, apps[1]));
+            Assert.Equal(new[] { "B" }, carpeta.Apps.Select(a => a.Name));
+        }
+
+        [Fact]
+        public void Preferencias_de_interfaz_se_conservan()
+        {
+            using var entorno = new EntornoPrueba();
+            using (var store = entorno.CrearStore())
+            {
+                Assert.True(store.CleanDesktop);     // recomendado en instalaciones nuevas
+                Assert.False(store.WelcomeSeen);
+                store.EstablecerWidgetVisible(false);
+                store.MarcarBienvenidaVista();
+                store.MarcarAvisoBandejaMostrado();
+            }
+
+            using var otra = entorno.CrearStore();
+            Assert.False(otra.ShowWidget);
+            Assert.True(otra.WelcomeSeen);
+            Assert.True(otra.TrayHintShown);
+        }
+
+        [Fact]
+        public void Guardar_accesos_existentes_limpia_el_Escritorio_solo_de_accesos()
+        {
+            using var entorno = new EntornoPrueba();
+            using var store = entorno.CrearStore();
+            store.EstablecerLimpiarEscritorio(false);
+            var carpeta = store.CrearCarpeta("Apps");
+            var lnk = entorno.EnEscritorio("Discord.lnk");
+            var pdf = entorno.EnEscritorio("informe.pdf");
+            store.AgregarElementos(carpeta, new[] { lnk, pdf });
+            Assert.Equal(1, store.ContarAccesosEnEscritorio());
+
+            Assert.Equal(1, store.GuardarAccesosDelEscritorio());
+
+            Assert.False(File.Exists(lnk));
+            Assert.True(File.Exists(pdf));                     // los documentos no se tocan
+            Assert.True(store.EsGestionado(carpeta.Apps[0]));
+            Assert.Equal("Discord", carpeta.Apps[0].Name);
+            Assert.Equal(0, store.ContarAccesosEnEscritorio());
+        }
+}
 }

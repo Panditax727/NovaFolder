@@ -25,7 +25,9 @@ NovaFolder/
 │   └── NovaFolder.App/           Aplicación de escritorio (Avalonia, solo Windows)
 │       ├── Program.cs            Arranque: Velopack, registro, errores globales, instancia única
 │       ├── App.axaml(.cs)        Raíz de composición, bandeja y estilos centralizados
-│       ├── Views/                MainWindow (widget), FolderPopupWindow, TrayMenuWindow
+│       ├── Views/                MainWindow (widget), FolderPopupWindow (carpeta abierta),
+│       │                         TrayPanelWindow (panel de la bandeja), BienvenidaWindow (guía),
+│       │                         NotificacionWindow (avisos junto a la bandeja)
 │       ├── Controls/             FolderTile, AppTile, Interacciones (clic, teclado, arrastrar)
 │       └── Services/
 │           ├── Applications/     Lanzar apps, accesos del Escritorio, ícono de carpeta
@@ -55,13 +57,14 @@ NovaFolder/
 | **Crear** | `CrearCarpeta(nombre?, rutas?)`, `CrearCarpetaMoviendo` | `AgregarElementos(carpeta, rutas, indice?)` → `ResultadoAgregar` |
 | **Leer** | `Folders`, `Buscar(nombre)`, `Obtener(nombre)` | `carpeta.Apps` |
 | **Actualizar** | `RenombrarCarpeta` | `MoverElemento`, `ReordenarElemento` |
-| **Eliminar** | `EliminarCarpeta` → índice, `RestaurarCarpeta` (deshacer) | `QuitarElemento`, `QuitarElementos` |
+| **Eliminar** | `EliminarCarpeta` → índice, `RestaurarCarpeta` (deshacer) | `QuitarElemento`, `QuitarElementos`, `SacarAlEscritorio` |
 
 ### Seguridad
 
 - Sin permisos de administrador (`asInvoker`). Solo escribe en el perfil del usuario.
 - La configuración se valida al cargarla: nombres válidos para Windows, sin duplicados, y límites de tamaño (5 MB), de carpetas (100) y de elementos (500 por carpeta). Un JSON corrupto se aparta como `.roto` y la app arranca igual.
 - El canal entre instancias (`SingleInstanceService`) usa un named pipe con `CurrentUserOnly` y limita el tamaño de los mensajes.
+- Al arrastrar un elemento fuera de la app, nunca se mueve el `.exe` de un programa ni una carpeta que no esté en el Escritorio (solo se crea un acceso directo); los documentos se copian.
 - Solo se borran o mueven archivos que NovaFolder creó: sus `.lnk` del Escritorio (identificados por `--folder`), su caché de íconos y su almacén de accesos.
 - Las actualizaciones no llevan ningún token en el ejecutable. Velopack verifica el hash de cada paquete descargado.
 
