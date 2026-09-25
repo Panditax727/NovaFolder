@@ -19,7 +19,7 @@
     Directory.Build.props.
 
 .PARAMETER ConservarAnteriores
-    No borra artifactseleases antes de empaquetar. Lo usa el workflow de
+    No borra artifacts\releases antes de empaquetar. Lo usa el workflow de
     Release, que descarga ahí las versiones ya publicadas para generar
     actualizaciones delta. En local no hace falta.
 
