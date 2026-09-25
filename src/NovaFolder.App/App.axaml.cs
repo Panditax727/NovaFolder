@@ -101,7 +101,7 @@ namespace NovaFolder
                 }
 
                 var args = desktop.Args ?? Array.Empty<string>();
-                bool porWindows = args.Contains(StartupService.ArgumentoAutoinicio);
+                bool porWindows = args.Contains(StartupService.ArgumentoAutoinicio) || PaqueteService.AbiertoAlIniciarSesion();
                 Log.Info($"NovaFolder {_actualizaciones.VersionActual} iniciado{(porWindows ? " con Windows" : "")}.");
                 if (!porWindows || args.Length > 1)
                     Dispatcher.UIThread.Post(() => ProcesarArgumentos(args), DispatcherPriority.Background);
@@ -337,6 +337,11 @@ namespace NovaFolder
         private void AplicarAutoinicio()
         {
             if (!OperatingSystem.IsWindows()) return;
+            if (PaqueteService.EsPaquete)
+            {
+                PaqueteService.AplicarInicioConWindows(_store.StartWithWindows);
+                return;
+            }
             if (_store.StartWithWindows) StartupService.AsegurarRegistrado();
             else StartupService.Desregistrar();
         }

@@ -15,6 +15,15 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    # Las credenciales de la Microsoft Store viven en este Environment
+    # (Settings -> Environments -> produccion). Configúralo para que solo
+    # acepte tags v* y te pida aprobación: nada se firma ni se envía sin ti.
+    environment: produccion
+    env:
+      MSSTORE_TENANT_ID: ${{ secrets.MSSTORE_TENANT_ID }}
+      MSSTORE_SELLER_ID: ${{ secrets.MSSTORE_SELLER_ID }}
+      MSSTORE_CLIENT_ID: ${{ secrets.MSSTORE_CLIENT_ID }}
+      MSSTORE_CLIENT_SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,3 +66,33 @@ jobs:
           --tag ${{ github.ref_name }}
           --releaseName "NovaFolder ${{ steps.version.outputs.numero }}"
           --publish
+
+      # ---------- Microsoft Store ----------
+
+      - name: Paquete MSIX para la Store
+        shell: pwsh
+        run: ./scripts/empaquetar-store.ps1 -Version ${{ steps.version.outputs.numero }}
+
+      # Siempre queda descargable desde la ejecución del workflow, por si
+      # prefieres subirlo a mano en Partner Center.
+      - name: Guardar el MSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: NovaFolder-store-${{ steps.version.outputs.numero }}
+          path: artifacts/store/*.msix
+
+      # Solo si el Environment tiene las credenciales de la API de la Store.
+      # La primera publicación de la app tiene que hacerse a mano en Partner
+      # Center (ficha, capturas, clasificación de edad); después, esto envía
+      # cada versión nueva automáticamente.
+      - name: Preparar Microsoft Store CLI
+        if: env.MSSTORE_CLIENT_SECRET != ''
+        uses: microsoft/setup-msstore-cli@v1
+
+      - name: Enviar a la Microsoft Store
+        if: env.MSSTORE_CLIENT_SECRET != ''
+        shell: pwsh
+        run: |
+          msstore reconfigure --tenantId $env:MSSTORE_TENANT_ID --sellerId $env:MSSTORE_SELLER_ID --clientId $env:MSSTORE_CLIENT_ID --clientSecret $env:MSSTORE_CLIENT_SECRET
+          $msix = Get-ChildItem artifacts/store/*.msix | Select-Object -First 1
+          msstore publish $msix.FullName -id 9P3KG5PCB5HD

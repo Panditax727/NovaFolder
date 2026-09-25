@@ -29,6 +29,11 @@ namespace NovaFolder.Views.Paginas
 
             BotonActualizar.Click += async (_, _) =>
             {
+                if (UpdateService.DeLaTienda)
+                {
+                    AppLauncherService.Lanzar(UpdateService.EnlaceTienda);
+                    return;
+                }
                 if (servicios.Actualizaciones.VersionLista != null)
                 {
                     servicios.Actualizaciones.ReiniciarEInstalar();
@@ -68,6 +73,13 @@ namespace NovaFolder.Views.Paginas
             }
             else
             {
+                if (UpdateService.DeLaTienda)
+                {
+                    EstadoActualizacion.Text = "Microsoft Store mantiene NovaFolder actualizado.";
+                    BotonActualizar.Content = "Ver en la Store";
+                    _cargando = false;
+                    return;
+                }
                 if (string.IsNullOrEmpty(EstadoActualizacion.Text))
                     EstadoActualizacion.Text = actualizaciones.EstaInstalada
                         ? "NovaFolder se actualiza solo en segundo plano."

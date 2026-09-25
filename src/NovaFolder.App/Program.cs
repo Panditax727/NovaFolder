@@ -14,8 +14,10 @@ namespace NovaFolder
 {
     internal static class Program
     {
-        // Rutas de datos de esta ejecución (las pruebas usan otras).
-        public static RutasApp Rutas { get; } = RutasApp.PorDefecto();
+        // Rutas de datos de esta ejecución: distintas si viene de la
+        // Microsoft Store (ver PaqueteService). Las pruebas usan otras.
+        public static RutasApp Rutas { get; } =
+            PaqueteService.EsPaquete ? PaqueteService.RutasEmpaquetadas() : RutasApp.PorDefecto();
 
         // La instancia única de esta ejecución; null en el diseñador de XAML.
         public static SingleInstanceService? Instancia { get; private set; }
@@ -29,9 +31,13 @@ namespace NovaFolder
             // Siempre lo primero: el instalador lanza el .exe con argumentos
             // propios (instalar, actualizar, desinstalar) y Velopack los
             // atiende aquí y termina el proceso sin llegar a abrir la app.
-            VelopackApp.Build()
-                .OnBeforeUninstallFastCallback(_ => LimpiarAlDesinstalar())
-                .Run();
+            // La versión de la Store no usa Velopack: la instala y actualiza Windows.
+            if (!PaqueteService.EsPaquete)
+            {
+                VelopackApp.Build()
+                    .OnBeforeUninstallFastCallback(_ => LimpiarAlDesinstalar())
+                    .Run();
+            }
 
             Log.Iniciar(Rutas.CarpetaRegistros);
             AppDomain.CurrentDomain.UnhandledException += (_, e) =>

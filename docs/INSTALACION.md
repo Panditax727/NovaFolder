@@ -8,12 +8,16 @@ NovaFolder ordena tu Escritorio: agrupa accesos directos, juegos y archivos en c
 - No necesitas instalar nada más: el instalador ya trae todo lo necesario.
 - No hacen falta permisos de administrador.
 
-## Instalación (1 minuto)
+## Instalación recomendada: Microsoft Store
+
+Busca **NovaFolder** en la Microsoft Store, o abre [su ficha](https://apps.microsoft.com/detail/9P3KG5PCB5HD), y pulsa **Obtener**. Sin avisos de seguridad, y la Store lo mantiene actualizado.
+
+## Instalación desde GitHub (alternativa)
 
 1. Descarga **`NovaFolder-win-Setup.exe`** desde la página de [versiones](https://github.com/Panditax727/NovaFolder/releases/latest).
 2. Haz doble clic en el archivo descargado.
 3. Si Windows muestra **«Windows protegió su PC»**, pulsa **Más información → Ejecutar de todas formas**.
-   Aparece porque el instalador aún no tiene firma digital de pago, no porque sea peligroso.
+   Aparece porque este instalador no está firmado. La versión de la Microsoft Store sí lo está y no muestra el aviso.
 4. En unos segundos se abre la **ventana de NovaFolder** con una guía de 4 pasos. Al final eliges si quieres limpiar el Escritorio y abrir NovaFolder al encender el equipo.
 
 Después lo encuentras en el **menú Inicio** como cualquier otro programa.
@@ -51,6 +55,8 @@ NovaFolder se actualiza solo. Descarga la versión nueva en segundo plano y la i
 ## Desinstalar
 
 **Configuración de Windows → Aplicaciones → Aplicaciones instaladas → NovaFolder → Desinstalar.**
+
+Si lo instalaste desde la Microsoft Store, los accesos directos que NovaFolder había guardado quedan en **Documentos\NovaFolder\Accesos guardados**: puedes devolverlos al Escritorio desde ahí.
 
 - Se quitan el inicio automático y las carpetas de NovaFolder del Escritorio.
 - Los accesos directos que NovaFolder había guardado **vuelven a tu Escritorio**: no pierdes nada.

@@ -37,8 +37,15 @@ namespace NovaFolder.Core
         public string? EscritorioComun { get; }
 
         public string ArchivoConfig => Path.Combine(Datos, "folders.json");
-        public string CarpetaAccesos => Path.Combine(Datos, "accesos");
-        public string CarpetaIconos => Path.Combine(Datos, "iconos");
         public string CarpetaRegistros => Path.Combine(Datos, "logs");
+
+        // Por defecto dentro de Datos. La versión de la Microsoft Store las
+        // saca de ahí (ver Program): sus datos se borran al desinstalar, y
+        // los accesos guardados del usuario no pueden perderse con ellos.
+        public string CarpetaAccesos { get => _accesos ?? Path.Combine(Datos, "accesos"); init => _accesos = value; }
+        public string CarpetaIconos { get => _iconos ?? Path.Combine(Datos, "iconos"); init => _iconos = value; }
+
+        private readonly string? _accesos;
+        private readonly string? _iconos;
     }
 }

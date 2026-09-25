@@ -23,6 +23,10 @@ namespace NovaFolder.Services.Updates
         // Único sitio donde se configura de dónde salen las versiones.
         public const string RepositorioGitHub = "https://github.com/Panditax727/NovaFolder";
 
+        // Ficha de NovaFolder en la Microsoft Store (no es un dato secreto).
+        public const string IdTienda = "9P3KG5PCB5HD";
+        public const string EnlaceTienda = "ms-windows-store://pdp/?productid=" + IdTienda;
+
         private static readonly TimeSpan PrimeraComprobacion = TimeSpan.FromSeconds(30);
         private static readonly TimeSpan Intervalo = TimeSpan.FromHours(6);
 
@@ -38,6 +42,8 @@ namespace NovaFolder.Services.Updates
 
         public UpdateService()
         {
+            // En la versión de la Store, las actualizaciones las hace la Store.
+            if (DeLaTienda) return;
             try
             {
                 _manager = new UpdateManager(new GithubSource(RepositorioGitHub, accessToken: null, prerelease: false));
@@ -52,8 +58,11 @@ namespace NovaFolder.Services.Updates
         // desde Visual Studio o "dotnet run" no hay nada que actualizar.
         public bool EstaInstalada => _manager?.IsInstalled == true;
 
+        public static bool DeLaTienda => Services.Windows.PaqueteService.EsPaquete;
+
         public string VersionActual =>
-            EstaInstalada && _manager!.CurrentVersion != null
+            DeLaTienda ? Services.Windows.PaqueteService.Version ?? "?"
+            : EstaInstalada && _manager!.CurrentVersion != null
                 ? _manager.CurrentVersion.ToString()
                 : (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?") + " (desarrollo)";
 
@@ -61,6 +70,11 @@ namespace NovaFolder.Services.Updates
 
         public void Iniciar()
         {
+            if (DeLaTienda)
+            {
+                Log.Info("Versión de la Microsoft Store: la actualiza la Store.");
+                return;
+            }
             if (!EstaInstalada)
             {
                 Log.Info("Copia de desarrollo: las actualizaciones automáticas están desactivadas.");
@@ -72,6 +86,7 @@ namespace NovaFolder.Services.Updates
         // Devuelve un texto para mostrar si la comprobación la pidió el usuario.
         public async Task<string> BuscarAsync()
         {
+            if (DeLaTienda) return "Microsoft Store mantiene NovaFolder actualizado.";
             if (!EstaInstalada) return "Esta copia no se instaló con el instalador: no se actualiza sola.";
             if (_lista != null) return $"La versión {VersionLista} ya está descargada. Reinicia para instalarla.";
             if (!await _enCurso.WaitAsync(0).ConfigureAwait(false)) return "Ya se está buscando una actualización…";

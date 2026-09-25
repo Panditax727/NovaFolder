@@ -77,6 +77,9 @@ namespace NovaFolder.Services.Applications
 
         private static string? RutaEjecutable()
         {
+            // Empaquetada (Store): el alias estable, no la ruta de WindowsApps,
+            // que cambia en cada actualización.
+            if (Services.Windows.PaqueteService.EsPaquete) return Services.Windows.PaqueteService.RutaAlias;
             var ruta = Environment.ProcessPath;
             return string.IsNullOrWhiteSpace(ruta) ? null : ruta;
         }

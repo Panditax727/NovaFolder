@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Manifiesto del paquete MSIX para la Microsoft Store.
+  Lo usa scripts/empaquetar-store.ps1, que reemplaza $VERSION$ por la versión
+  a publicar. La identidad (Name, Publisher, PublisherDisplayName) la asigna
+  Partner Center y no es secreta: va en cada paquete publicado.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap3 desktop rescap">
+
+  <Identity
+    Name="Panditax727.NovaFolder"
+    Publisher="CN=F779745A-34B2-4F98-9C18-130EACD9002B"
+    Version="$VERSION$"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>NovaFolder</DisplayName>
+    <PublisherDisplayName>Panditax727</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="es-ES" />
+  </Resources>
+
+  <Applications>
+    <Application Id="NovaFolder" Executable="NovaFolder.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="NovaFolder"
+        Description="Ordena tu Escritorio en carpetas que se abren con un clic."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="NovaFolder" />
+      </uap:VisualElements>
+
+      <Extensions>
+        <!-- Ruta estable para los accesos de carpeta del Escritorio:
+             %LOCALAPPDATA%\Microsoft\WindowsApps\NovaFolder.exe -->
+        <uap3:Extension Category="windows.appExecutionAlias" Executable="NovaFolder.exe" EntryPoint="Windows.FullTrustApplication">
+          <uap3:AppExecutionAlias>
+            <desktop:ExecutionAlias Alias="NovaFolder.exe" />
+          </uap3:AppExecutionAlias>
+        </uap3:Extension>
+
+        <!-- Inicio con Windows (sustituye a la clave Run del registro, que
+             las apps de la Store no pueden usar). El id se usa en PaqueteService. -->
+        <desktop:Extension Category="windows.startupTask" Executable="NovaFolder.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="NovaFolderInicio" Enabled="true" DisplayName="NovaFolder" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Necesario para una app de escritorio completa (accesos del
+         Escritorio, íconos del shell, lanzar programas). -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

@@ -4,7 +4,8 @@
 
 Organiza los accesos directos, juegos y archivos del Escritorio de Windows en carpetas que se abren con un clic, al estilo Android, sin pasar por el Explorador.
 
-- **¿Quieres usarlo?** → [Guía de instalación](docs/INSTALACION.md)
+- **¿Quieres usarlo?** → [Microsoft Store](https://apps.microsoft.com/detail/9P3KG5PCB5HD) · [Guía de instalación](docs/INSTALACION.md)
+- **¿Vas a publicar una versión?** → [Guía de publicación](docs/PUBLICAR.md)
 - **¿Qué cambió?** → [CHANGELOG](CHANGELOG.md)
 
 ---
@@ -39,7 +40,10 @@ NovaFolder/
 │           └── Updates/          Actualizaciones automáticas (Velopack)
 │
 ├── tests/NovaFolder.Core.Tests/  Pruebas xUnit de Core
-├── scripts/publicar.ps1          Genera el instalador
+├── scripts/
+│   ├── publicar.ps1              Pruebas + instalador Setup.exe (GitHub Releases)
+│   └── empaquetar-store.ps1      Paquete MSIX para la Microsoft Store
+├── packaging/store/              Manifiesto e imágenes del paquete de la Store
 ├── assets/                       Ícono e imagen del instalador
 ├── docs/                         Documentación para usuarios
 └── .github/workflows/            CI (pruebas) y Release (instalador + actualizaciones)
