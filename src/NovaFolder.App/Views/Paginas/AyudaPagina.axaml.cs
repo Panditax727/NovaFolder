@@ -32,7 +32,7 @@ namespace NovaFolder.Views.Paginas
             ("¿Dónde está NovaFolder cuando cierro la ventana?",
              "En la bandeja del sistema, junto al reloj (si no lo ves, pulsa la flecha ^). Para cerrarlo del todo: Ajustes → «Salir de NovaFolder»."),
             ("¿Cómo lo desinstalo?",
-             "Configuración de Windows → Aplicaciones → NovaFolder → Desinstalar. Si lo instalaste con el Setup, tus accesos directos vuelven solos al Escritorio. Si vino de la Microsoft Store, quedan en Documentos\\NovaFolder\\Accesos guardados para que no se pierdan.")
+             "Ajustes → «Desinstalar NovaFolder», o desde Configuración de Windows → Aplicaciones. Si lo instalaste con el Setup, tus accesos directos vuelven solos al Escritorio. Si vino de la Microsoft Store, quedan en Documentos\\NovaFolder\\Accesos guardados para que no se pierdan.")
         };
 
         public AyudaPagina() => InitializeComponent();

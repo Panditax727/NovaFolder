@@ -54,7 +54,11 @@ NovaFolder se actualiza solo. Descarga la versión nueva en segundo plano y la i
 
 ## Desinstalar
 
-**Configuración de Windows → Aplicaciones → Aplicaciones instaladas → NovaFolder → Desinstalar.**
+Cualquiera de estas tres formas:
+
+- Dentro de NovaFolder: **Ajustes → Desinstalar NovaFolder**.
+- **Configuración de Windows → Aplicaciones → Aplicaciones instaladas → NovaFolder → Desinstalar.**
+- Clic derecho sobre NovaFolder en el menú Inicio → **Desinstalar**.
 
 Si lo instalaste desde la Microsoft Store, los accesos directos que NovaFolder había guardado quedan en **Documentos\NovaFolder\Accesos guardados**: puedes devolverlos al Escritorio desde ahí.
 

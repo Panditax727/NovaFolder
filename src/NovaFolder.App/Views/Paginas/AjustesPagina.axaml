@@ -80,16 +80,29 @@
             <!-- Datos -->
             <TextBlock Text="DATOS" Classes="seccion" Margin="4,6,0,0"/>
             <Border Classes="tarjeta" Padding="6">
-                <Border Classes="nova-fila">
-                    <Grid ColumnDefinitions="Auto,*,Auto">
-                        <TextBlock Classes="glifo" Text="&#xE8B7;"/>
-                        <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
-                            <TextBlock Text="Configuración y registros" Classes="texto" FontWeight="SemiBold"/>
-                            <TextBlock Name="RutaDatos" Classes="suave" FontSize="12" TextWrapping="Wrap"/>
-                        </StackPanel>
-                        <Button Name="BotonDatos" Grid.Column="2" Classes="secundario" Content="Abrir carpeta"/>
-                    </Grid>
-                </Border>
+                <StackPanel>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xE8B7;"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Configuración y registros" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Name="RutaDatos" Classes="suave" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Name="BotonDatos" Grid.Column="2" Classes="secundario" Content="Abrir carpeta"/>
+                        </Grid>
+                    </Border>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xE74D;" Foreground="{StaticResource NovaError}"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Desinstalar NovaFolder" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Classes="suave" FontSize="12" TextWrapping="Wrap"
+                                           Text="Quita el programa del equipo. Tus archivos no se tocan y los accesos directos que NovaFolder guardó vuelven al Escritorio."/>
+                            </StackPanel>
+                            <Button Name="BotonDesinstalar" Grid.Column="2" Classes="secundario peligro" Content="Desinstalar…"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
             </Border>
 
             <!-- Acerca de -->

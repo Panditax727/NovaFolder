@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using NovaFolder.Services.Applications;
 using NovaFolder.Services.Updates;
+using NovaFolder.Services.Windows;
 using NovaFolder.Views.Principal;
 
 namespace NovaFolder.Views.Paginas
@@ -49,6 +50,11 @@ namespace NovaFolder.Views.Paginas
             BotonWeb.Click += (_, _) => AppLauncherService.Lanzar(UpdateService.RepositorioGitHub);
             BotonSalir.Click += (_, _) => servicios.Salir();
 
+            // Se confirma en la barra de avisos: un clic suelto no desinstala nada.
+            BotonDesinstalar.Click += (_, _) => _aviso.Avisar(
+                "¿Seguro que quieres desinstalar NovaFolder?", esError: true,
+                textoAccion: "Sí, desinstalar", accion: Desinstalar);
+
             // Se refresca al volver a la página: el widget pudo ocultarse desde
             // su propio menú, o la bienvenida pudo cambiar algo.
             AttachedToVisualTree += (_, _) => Cargar();
@@ -87,6 +93,23 @@ namespace NovaFolder.Views.Paginas
                 BotonActualizar.Content = "Buscar ahora";
             }
             _cargando = false;
+        }
+
+        private void Desinstalar()
+        {
+            switch (DesinstaladorService.Desinstalar())
+            {
+                case ResultadoDesinstalar.Lanzado:
+                    // El desinstalador espera a que NovaFolder se cierre.
+                    _servicios.Salir();
+                    break;
+                case ResultadoDesinstalar.ConfiguracionAbierta:
+                    _aviso.Avisar("Busca NovaFolder en la lista de Aplicaciones de Windows y pulsa Desinstalar.");
+                    break;
+                default:
+                    _aviso.Avisar("Esta copia no está instalada (es de desarrollo): basta con borrar su carpeta.", esError: true);
+                    break;
+            }
         }
 
         // Ignora los cambios que hace Cargar al poner los valores iniciales.
