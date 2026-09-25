@@ -6,6 +6,7 @@ Organiza los accesos directos, juegos y archivos del Escritorio de Windows en ca
 
 - **¿Quieres usarlo?** → [Microsoft Store](https://apps.microsoft.com/detail/9P3KG5PCB5HD) · [Guía de instalación](docs/INSTALACION.md)
 - **¿Vas a publicar una versión?** → [Guía de publicación](docs/PUBLICAR.md)
+- [Privacidad](docs/PRIVACIDAD.md) · [Firma de código](docs/FIRMA-DE-CODIGO.md) · [Seguridad](SECURITY.md) · Licencia [MIT](LICENSE)
 - **¿Qué cambió?** → [CHANGELOG](CHANGELOG.md)
 
 ---

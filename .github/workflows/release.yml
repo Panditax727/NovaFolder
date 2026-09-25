@@ -67,6 +67,19 @@ jobs:
           --releaseName "NovaFolder ${{ steps.version.outputs.numero }}"
           --publish
 
+      # Hash de cada archivo publicado: cualquiera puede comprobar que lo que
+      # descargó es exactamente lo que se compiló aquí.
+      - name: Publicar SHA256SUMS.txt
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $archivos = Get-ChildItem artifacts/releases -File | Where-Object { $_.Extension -in '.exe', '.zip', '.nupkg' }
+          $archivos | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name } |
+            Set-Content SHA256SUMS.txt -Encoding utf8
+          Get-Content SHA256SUMS.txt
+          gh release upload "${{ github.ref_name }}" SHA256SUMS.txt --clobber
+
       # ---------- Microsoft Store ----------
 
       - name: Paquete MSIX para la Store
