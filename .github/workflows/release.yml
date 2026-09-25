@@ -25,9 +25,9 @@ jobs:
       MSSTORE_CLIENT_ID: ${{ secrets.MSSTORE_CLIENT_ID }}
       MSSTORE_CLIENT_SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -76,7 +76,7 @@ jobs:
       # Siempre queda descargable desde la ejecución del workflow, por si
       # prefieres subirlo a mano en Partner Center.
       - name: Guardar el MSIX
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: NovaFolder-store-${{ steps.version.outputs.numero }}
           path: artifacts/store/*.msix
