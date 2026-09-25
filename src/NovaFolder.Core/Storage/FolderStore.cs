@@ -25,6 +25,9 @@ namespace NovaFolder.Core.Storage
             : null;
     }
 
+    // Lo que entró en una carpeta al organizar el Escritorio.
+    public sealed record ResultadoOrganizar(AppFolder Carpeta, IReadOnlyList<AppShortcut> Agregados, bool Creada);
+
     // Única fuente de verdad de las carpetas mientras la app está abierta,
     // con las operaciones CRUD de carpetas y de sus elementos.
     //
@@ -158,6 +161,38 @@ namespace NovaFolder.Core.Storage
             Confirmar();
         }
 
+        // ================= Organizar el Escritorio =================
+
+        // Mete cada ruta en la carpeta indicada, creándola si no existe.
+        // Devuelve qué entró en cada carpeta y si se creó, para poder deshacer.
+        public IReadOnlyList<ResultadoOrganizar> Organizar(IEnumerable<(string Ruta, string Carpeta)> asignaciones)
+        {
+            ArgumentNullException.ThrowIfNull(asignaciones);
+            var resumen = new List<ResultadoOrganizar>();
+
+            foreach (var grupo in asignaciones.GroupBy(a => Validador.NombreCarpeta(a.Carpeta), StringComparer.OrdinalIgnoreCase))
+            {
+                var existente = Buscar(grupo.Key);
+                var carpeta = existente ?? CrearCarpeta(grupo.Key);
+                var resultado = AgregarElementos(carpeta, grupo.Select(a => a.Ruta));
+                if (resultado.Agregados.Count > 0 || existente == null)
+                    resumen.Add(new ResultadoOrganizar(carpeta, resultado.Agregados, Creada: existente == null));
+            }
+            return resumen;
+        }
+
+        // Deshace Organizar: saca lo que entró y borra las carpetas que se
+        // crearon para ello si quedaron vacías.
+        public void DeshacerOrganizar(IEnumerable<ResultadoOrganizar> resumen)
+        {
+            foreach (var r in resumen)
+            {
+                if (!_config.Folders.Contains(r.Carpeta)) continue;
+                QuitarElementos(r.Carpeta, r.Agregados);
+                if (r.Creada && r.Carpeta.Apps.Count == 0) EliminarCarpeta(r.Carpeta);
+            }
+        }
+
         // ================= Elementos de una carpeta =================
 
         // indice = dónde insertar; null = al final. Nunca lanza por una ruta
@@ -279,6 +314,7 @@ namespace NovaFolder.Core.Storage
         public bool StartWithWindows => _config.StartWithWindows;
         public bool CleanDesktop => _config.CleanDesktop;
         public bool ShowWidget => _config.ShowWidget;
+        public bool DesktopFolders => _config.DesktopFolders;
         public bool WelcomeSeen => _config.WelcomeSeen;
         public bool TrayHintShown => _config.TrayHintShown;
         public (int X, int Y)? PosicionVentana =>
@@ -309,6 +345,14 @@ namespace NovaFolder.Core.Storage
             if (_config.ShowWidget == visible) return;
             _config.ShowWidget = visible;
             Guardar();
+        }
+
+        // Cambia Changed: los accesos del Escritorio se crean o se quitan.
+        public void EstablecerCarpetasEnEscritorio(bool activo)
+        {
+            if (_config.DesktopFolders == activo) return;
+            _config.DesktopFolders = activo;
+            Confirmar();
         }
 
         public void MarcarBienvenidaVista()

@@ -26,7 +26,9 @@ namespace NovaFolder.Services.Updates
         private static readonly TimeSpan PrimeraComprobacion = TimeSpan.FromSeconds(30);
         private static readonly TimeSpan Intervalo = TimeSpan.FromHours(6);
 
-        private readonly UpdateManager _manager;
+        // null si Velopack no pudo iniciarse (p. ej. no se llamó a
+        // VelopackApp.Run): la app funciona igual, solo sin actualizaciones.
+        private readonly UpdateManager? _manager;
         private readonly SemaphoreSlim _enCurso = new(1, 1);
         private Timer? _temporizador;
         private UpdateInfo? _lista;
@@ -36,15 +38,22 @@ namespace NovaFolder.Services.Updates
 
         public UpdateService()
         {
-            _manager = new UpdateManager(new GithubSource(RepositorioGitHub, accessToken: null, prerelease: false));
+            try
+            {
+                _manager = new UpdateManager(new GithubSource(RepositorioGitHub, accessToken: null, prerelease: false));
+            }
+            catch (InvalidOperationException ex)
+            {
+                Log.Advertencia($"Actualizaciones desactivadas: {ex.Message}");
+            }
         }
 
         // Solo una copia instalada con el Setup puede actualizarse; ejecutada
         // desde Visual Studio o "dotnet run" no hay nada que actualizar.
-        public bool EstaInstalada => _manager.IsInstalled;
+        public bool EstaInstalada => _manager?.IsInstalled == true;
 
         public string VersionActual =>
-            _manager.IsInstalled && _manager.CurrentVersion != null
+            EstaInstalada && _manager!.CurrentVersion != null
                 ? _manager.CurrentVersion.ToString()
                 : (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?") + " (desarrollo)";
 
@@ -69,7 +78,7 @@ namespace NovaFolder.Services.Updates
 
             try
             {
-                var info = await _manager.CheckForUpdatesAsync().ConfigureAwait(false);
+                var info = await _manager!.CheckForUpdatesAsync().ConfigureAwait(false);
                 if (info == null) return $"Tienes la última versión ({VersionActual}).";
 
                 Log.Info($"Descargando la versión {info.TargetFullRelease.Version}…");
@@ -96,7 +105,7 @@ namespace NovaFolder.Services.Updates
         {
             if (_lista == null) return;
             Log.Info($"Reiniciando para instalar la versión {VersionLista}.");
-            _manager.ApplyUpdatesAndRestart(_lista.TargetFullRelease);
+            _manager?.ApplyUpdatesAndRestart(_lista.TargetFullRelease);
         }
 
         public void Dispose()

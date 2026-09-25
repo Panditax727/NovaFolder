@@ -19,8 +19,12 @@ namespace NovaFolder.Core.Models
         // usuario tiene que ser decisión suya: se confirma en la bienvenida.
         public bool CleanDesktop { get; set; }
 
-        // El widget se ocultó desde la bandeja: sigue oculto tras reiniciar.
+        // Widget flotante sobre el Escritorio. Es un complemento opcional: la
+        // app principal es su ventana. Apagado en instalaciones nuevas.
         public bool ShowWidget { get; set; } = true;
+
+        // Un acceso por carpeta en el Escritorio, para abrirlas desde ahí.
+        public bool DesktopFolders { get; set; } = true;
 
         // Ya vio la bienvenida guiada (se muestra una sola vez).
         public bool WelcomeSeen { get; set; }

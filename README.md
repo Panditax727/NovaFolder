@@ -17,6 +17,7 @@ NovaFolder/
 │   ├── NovaFolder.Core/          Lógica sin interfaz (se prueba de forma aislada)
 │   │   ├── Models/               AppFolder, AppShortcut, NovaConfig
 │   │   ├── Storage/              FolderStore (CRUD), ConfigRepository (JSON), AlmacenAccesos, LnkReader
+│   │   ├── Organization/         Clasificador (sugiere carpeta) y EscritorioScanner (qué está suelto)
 │   │   ├── Validation/           Validador + Limites: reglas de nombres, rutas y tamaños
 │   │   ├── Errors/               NovaFolderException y derivadas
 │   │   ├── Diagnostics/          Log: registro diario en archivo
@@ -25,10 +26,13 @@ NovaFolder/
 │   └── NovaFolder.App/           Aplicación de escritorio (Avalonia, solo Windows)
 │       ├── Program.cs            Arranque: Velopack, registro, errores globales, instancia única
 │       ├── App.axaml(.cs)        Raíz de composición, bandeja y estilos centralizados
-│       ├── Views/                MainWindow (widget), FolderPopupWindow (carpeta abierta),
-│       │                         TrayPanelWindow (panel de la bandeja), BienvenidaWindow (guía),
-│       │                         NotificacionWindow (avisos junto a la bandeja)
-│       ├── Controls/             FolderTile, AppTile, Interacciones (clic, teclado, arrastrar)
+│       ├── Views/                MainWindow (ventana de la app), WidgetWindow (widget flotante),
+│       │   │                     FolderPopupWindow (carpeta abierta estilo Android),
+│       │   │                     BienvenidaWindow (guía), NotificacionWindow (avisos junto al reloj)
+│       │   ├── Paginas/          Carpetas, Ordenar Escritorio, Ajustes, Ayuda
+│       │   └── Principal/        ServiciosApp (lo que reciben las páginas) e IAvisador
+│       ├── Controls/             VistaCarpeta (rejilla de una carpeta, compartida), FolderTile,
+│       │                         AppTile, Interacciones (clic, teclado, arrastrar)
 │       └── Services/
 │           ├── Applications/     Lanzar apps, accesos del Escritorio, ícono de carpeta
 │           ├── Windows/          Íconos del shell, hilo STA, instancia única, autoinicio, orden Z

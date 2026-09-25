@@ -67,9 +67,12 @@ namespace NovaFolder.Controls
         }
 
         // Rectángulo de la tarjeta en píxeles de pantalla: el popup se abre
-        // pegado a él para que se note de dónde salió.
-        public PixelRect RectEnPantalla()
+        // pegado a él para que se note de dónde salió. null si la tarjeta ya
+        // no está en pantalla (su ventana se cerró): el popup se abrirá
+        // junto al puntero.
+        public PixelRect? RectEnPantalla()
         {
+            if (TopLevel.GetTopLevel(this) == null) return null;
             var arriba = this.PointToScreen(new Point(0, 0));
             var abajo = this.PointToScreen(new Point(Bounds.Width, Bounds.Height));
             return new PixelRect(arriba, abajo);

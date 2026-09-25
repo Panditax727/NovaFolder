@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NovaFolder.Views.Paginas.CarpetasPagina">
+
+    <DockPanel>
+        <!-- Cabecera -->
+        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Carpetas" Classes="h1"/>
+                <TextBlock Name="Resumen" Classes="suave" FontSize="13"/>
+            </StackPanel>
+            <Button Name="BotonNueva" Grid.Column="1" Classes="primario" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Classes="glifo" Text="&#xE710;" Foreground="White" FontSize="13"/>
+                    <TextBlock Text="Nueva carpeta"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Sin ninguna carpeta: primer paso -->
+        <Border Name="SinCarpetas" Classes="tarjeta" IsVisible="False" Padding="40">
+            <StackPanel Spacing="14" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="420">
+                <Border Width="72" Height="72" CornerRadius="36" Background="{StaticResource NovaAcentoSuave}" HorizontalAlignment="Center">
+                    <TextBlock Classes="glifo" Text="&#xE8F4;" FontSize="30" Foreground="White" HorizontalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="Crea tu primera carpeta" Classes="h2" HorizontalAlignment="Center"/>
+                <TextBlock Classes="suave" FontSize="13" TextAlignment="Center" TextWrapping="Wrap"
+                           Text="Agrupa juegos, apps o documentos. O deja que NovaFolder ordene tu Escritorio por ti."/>
+                <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                    <Button Name="BotonPrimera" Classes="primario" Content="Crear carpeta"/>
+                    <Button Name="BotonIrAOrdenar" Classes="secundario" Content="Ordenar mi Escritorio"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Grid Name="Contenido" ColumnDefinitions="270,20,*">
+            <!-- Lista de carpetas -->
+            <Border Classes="tarjeta" Padding="8">
+                <ListBox Name="Lista" Classes="lista" SelectionMode="Single"/>
+            </Border>
+
+            <!-- Carpeta seleccionada -->
+            <Border Grid.Column="2" Classes="tarjeta" Padding="20,16,20,12">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="0,0,0,12">
+                        <Panel VerticalAlignment="Center">
+                            <StackPanel Name="Cabecera" Spacing="2">
+                                <TextBlock Name="Nombre" Classes="h2" FontSize="20" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Name="Detalle" Classes="suave" FontSize="12"/>
+                            </StackPanel>
+                            <TextBox Name="EditorNombre" IsVisible="False" FontSize="18" MaxLength="60" MinHeight="0" Padding="8,4"/>
+                        </Panel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="12,0,0,0">
+                            <Button Name="BotonAgregar" Classes="secundario" ToolTip.Tip="Agregar archivos, apps o accesos directos">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Classes="glifo" Text="&#xE710;" FontSize="13"/>
+                                    <TextBlock Text="Agregar"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Name="BotonRenombrar" Classes="secundario" ToolTip.Tip="Cambiar nombre (F2)">
+                                <TextBlock Classes="glifo" Text="&#xE8AC;" FontSize="13"/>
+                            </Button>
+                            <Button Name="BotonEliminar" Classes="secundario peligro" ToolTip.Tip="Eliminar carpeta (no borra los archivos)">
+                                <TextBlock Classes="glifo" Text="&#xE74D;" FontSize="13" Foreground="{StaticResource NovaError}"/>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBox Name="Buscador" DockPanel.Dock="Top" PlaceholderText="Buscar en esta carpeta…" Margin="0,0,0,10">
+                        <TextBox.InnerLeftContent>
+                            <TextBlock Classes="glifo" Text="&#xE721;" FontSize="13" Margin="10,0,0,0" Opacity="0.7"/>
+                        </TextBox.InnerLeftContent>
+                    </TextBox>
+
+                    <TextBlock DockPanel.Dock="Bottom" Classes="pista" Margin="0,10,0,0"
+                               Text="Clic para abrir · arrastra para ordenar o moverlo · clic derecho para más"
+                               ToolTip.Tip="También puedes arrastrar un elemento a otra carpeta de la lista, o al Escritorio para sacarlo."/>
+
+                    <ContentControl Name="Vista"/>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

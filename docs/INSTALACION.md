@@ -1,6 +1,6 @@
 # Instalar NovaFolder
 
-NovaFolder organiza tus accesos directos, juegos y archivos en carpetas que se abren con un clic, como en Android.
+NovaFolder ordena tu Escritorio: agrupa accesos directos, juegos y archivos en carpetas que se abren con un clic, como en el móvil.
 
 ## Requisitos
 
@@ -14,49 +14,48 @@ NovaFolder organiza tus accesos directos, juegos y archivos en carpetas que se a
 2. Haz doble clic en el archivo descargado.
 3. Si Windows muestra **«Windows protegió su PC»**, pulsa **Más información → Ejecutar de todas formas**.
    Aparece porque el instalador aún no tiene firma digital de pago, no porque sea peligroso.
-4. Espera unos segundos: NovaFolder se instala y se abre solo con una **bienvenida de 4 pasos** que explica cómo usarlo. Al final eliges si quieres limpiar el Escritorio y abrir NovaFolder al encender el equipo.
+4. En unos segundos se abre la **ventana de NovaFolder** con una guía de 4 pasos. Al final eliges si quieres limpiar el Escritorio y abrir NovaFolder al encender el equipo.
 
-Al terminar verás:
+Después lo encuentras en el **menú Inicio** como cualquier otro programa.
 
-- El **widget** de NovaFolder en la esquina superior izquierda del Escritorio (puedes moverlo arrastrando su barra superior).
-- El ícono **morado** de NovaFolder en la bandeja del sistema, junto al reloj. Si no lo ves, está en la flecha **^**. Un clic en él abre el **panel de NovaFolder**: tus carpetas, los ajustes y las actualizaciones.
-- **NovaFolder** en el menú Inicio.
+## La ventana de NovaFolder
+
+| Sección | Para qué sirve |
+|---|---|
+| **Carpetas** | Ver y gestionar tus carpetas: crear, renombrar, eliminar, agregar, ordenar, buscar |
+| **Ordenar Escritorio** | Revisa lo que está suelto en tu Escritorio, sugiere una carpeta para cada cosa y lo ordena todo con un clic |
+| **Ajustes** | Limpiar el Escritorio, carpetas en el Escritorio, widget flotante, inicio con Windows y actualizaciones |
+| **Ayuda** | Todos los gestos y preguntas frecuentes |
+
+Al **cerrar la ventana**, NovaFolder sigue funcionando junto al reloj, para que las carpetas del Escritorio se abran al instante. Un clic en su ícono morado (si no lo ves, pulsa la flecha **^**) vuelve a abrir la ventana. Para cerrarlo del todo: **Ajustes → Salir de NovaFolder**.
 
 ## Primeros pasos
 
 | Para… | Haz esto |
 |---|---|
-| Crear una carpeta | Pulsa **+** en el widget |
-| Meter un juego o una app | Arrastra su acceso directo sobre la carpeta (en el widget o en el Escritorio) |
-| Abrir una carpeta | Clic en ella |
-| Abrir un juego o una app | Clic sobre él dentro de la carpeta |
-| Ordenar | Arrastra los elementos dentro de la carpeta abierta |
-| Mover a otra carpeta | Arrastra el elemento sobre otra carpeta del widget |
+| Ordenar todo el Escritorio de una vez | **Ordenar Escritorio** → revisa las sugerencias → **Ordenar** |
+| Crear una carpeta | **Carpetas** → **Nueva carpeta** |
+| Meter algo en una carpeta | Arrastra su acceso directo sobre la carpeta (en la lista o en su ícono del Escritorio) |
+| Abrir un juego o una app | Clic sobre él |
+| Ordenar o mover | Arrastra el elemento a otra posición, o sobre otra carpeta de la lista |
 | Sacar algo de una carpeta | Arrástralo al Escritorio, o clic derecho → **Devolver al Escritorio** |
-| Renombrar o eliminar | Clic derecho sobre la carpeta o el elemento |
-| Dejar el Escritorio limpio | Panel de la bandeja → **Limpiar el Escritorio** |
-| Ocultar el widget | **⋯** → Ocultar widget. NovaFolder sigue en la bandeja |
-| Volver a ver la guía | Botón **?** del widget o del panel de la bandeja |
+| Renombrar o eliminar una carpeta | Botones junto a su nombre, o clic derecho sobre ella |
+| Deshacer | Botón **Deshacer** en el aviso que aparece abajo |
 
-Cada carpeta también aparece en tu Escritorio con una miniatura de lo que contiene. Puedes soltar accesos directos directamente sobre ella.
+Cada carpeta aparece también en tu Escritorio con una miniatura de lo que contiene: doble clic para verla sin abrir la ventana.
 
 ## Actualizaciones
 
-NovaFolder se actualiza solo. Cuando hay una versión nueva, la descarga en segundo plano y la instala la próxima vez que se inicia. Si quieres instalarla en el momento, pulsa **Reiniciar** en el aviso del widget.
-
-Para comprobarlo a mano: panel de la bandeja → **Actualizar**.
+NovaFolder se actualiza solo. Descarga la versión nueva en segundo plano y la instala la próxima vez que se inicia, o al momento con **Reiniciar y actualizar**.
 
 ## Desinstalar
 
 **Configuración de Windows → Aplicaciones → Aplicaciones instaladas → NovaFolder → Desinstalar.**
 
-Al desinstalar:
-
-- se quitan el autoinicio y las carpetas de NovaFolder del Escritorio;
-- los accesos directos que NovaFolder había guardado **vuelven a tu Escritorio**, así que no pierdes nada;
-- tu configuración se conserva en `%APPDATA%\NovaFolder`, por si vuelves a instalarlo. Puedes borrar esa carpeta si no lo vas a hacer.
+- Se quitan el inicio automático y las carpetas de NovaFolder del Escritorio.
+- Los accesos directos que NovaFolder había guardado **vuelven a tu Escritorio**: no pierdes nada.
+- Tu configuración queda en `%APPDATA%\NovaFolder` por si lo vuelves a instalar; puedes borrarla.
 
 ## Si algo falla
 
-- Panel de la bandeja → **Datos**. Dentro de `logs` está el registro del día; adjúntalo si reportas un problema.
-- Reporta problemas en [GitHub Issues](https://github.com/Panditax727/NovaFolder/issues).
+**Ajustes → Configuración y registros → Abrir carpeta**. Dentro de `logs` está el registro del día; adjúntalo si reportas un problema en [GitHub Issues](https://github.com/Panditax727/NovaFolder/issues).

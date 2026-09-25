@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -13,7 +11,6 @@ using Avalonia.Threading;
 using NovaFolder.Controls;
 using NovaFolder.Core.Errors;
 using NovaFolder.Core.Models;
-using NovaFolder.Services.Applications;
 using NovaFolder.Core.Storage;
 using NovaFolder.Services.Windows;
 
@@ -21,8 +18,8 @@ namespace NovaFolder.Views
 {
     // Una carpeta abierta, al estilo Android: una tarjeta flotante con su
     // contenido que se cierra al hacer clic afuera, con Escape o al abrir
-    // algo. Es la única vista de "carpeta abierta" de la app: la usan
-    // tanto el widget como los accesos directos del Escritorio.
+    // algo. La abren el widget y los accesos directos del Escritorio; la
+    // rejilla de elementos es VistaCarpeta, la misma de la ventana principal.
     public partial class FolderPopupWindow : Window
     {
         private const int Columnas = 4;
@@ -31,7 +28,7 @@ namespace NovaFolder.Views
         private const int MargenAncla = 8;
 
         private readonly FolderStore _store = null!;
-        private AppFolder _folder = null!;
+        private readonly VistaCarpeta _vista = null!;
         private readonly PixelRect? _ancla;
 
         // Mientras hay un selector de archivos o un menú abierto, la ventana
@@ -49,7 +46,6 @@ namespace NovaFolder.Views
         {
             InitializeComponent();
             _store = store;
-            _folder = folder;
 
             // El puntero se lee UNA vez, al abrir. Si se leyera en cada
             // cambio de tamaño, la ventana perseguiría al ratón al mostrar
@@ -68,39 +64,41 @@ namespace NovaFolder.Views
                 WindowTransparencyLevel.Transparent
             };
 
-            Raiz.Width = Columnas * AppTile.Ancho;
-            Desplazador.MaxHeight = AltoMaximoLista;
-            Elementos.ItemWidth = AppTile.Ancho;
+            Raiz.Width = Columnas * AppTile.Ancho + 4;
+            _vista = new VistaCarpeta(store) { AltoMaximo = AltoMaximoLista };
+            Contenido.Content = _vista;
 
             ConectarEventos();
-            Reconstruir();
+            _vista.Carpeta = folder;
+            ActualizarCabecera();
         }
+
+        private AppFolder Carpeta => _vista.Carpeta!;
 
         // Para carpetas recién creadas: se abren ya con el nombre en edición.
         public void EmpezarRenombradoAlAbrir() => Opened += (_, _) => EmpezarRenombrado();
 
         private void ConectarEventos()
         {
+            _vista.AvisoPedido += MostrarAviso;
+            _vista.AppAbierta += _ => Close();   // como en Android: abrir algo cierra la carpeta
+            _vista.AgregarPedido += () => _ = AgregarConSelector();
+            _vista.CarpetaDesaparecida += Close;
+            _vista.MenuAbierto += () => _bloqueosCierre++;
+            _vista.MenuCerrado += AlCerrarMenu;
+
+            _store.Changed += AlCambiarStore;
+            Closed += (_, _) => _store.Changed -= AlCambiarStore;
+
             Titulo.PointerPressed += (_, e) => { e.Handled = true; EmpezarRenombrado(); };
             EditorTitulo.KeyDown += EditorTitulo_KeyDown;
             EditorTitulo.LostFocus += (_, _) => ConfirmarRenombrado(desdePerdidaDeFoco: true);
 
             BotonAgregar.Click += async (_, _) => await AgregarConSelector();
-            BotonAgregarVacia.Click += async (_, _) => await AgregarConSelector();
             BotonMas.Flyout = CrearMenuMas();
 
-            Buscador.TextChanged += (_, _) => Filtrar();
+            Buscador.TextChanged += (_, _) => _vista.Filtro = Buscador.Text ?? "";
             Buscador.KeyDown += Buscador_KeyDown;
-
-            // Soltar en el fondo de la carpeta: al final. Sobre un elemento
-            // concreto: en su lugar (ver Reconstruir).
-            Interacciones.AceptarSoltar(Tarjeta,
-                rutas => Agregar(rutas),
-                elemento => Recolocar(elemento, _folder.Apps.Count),
-                resaltar: Tarjeta);
-
-            _store.Changed += AlCambiarStore;
-            Closed += (_, _) => _store.Changed -= AlCambiarStore;
 
             // Se recoloca en CADA SizeChanged: con SizeToContent la ventana
             // pasa por su tamaño por defecto antes de encogerse al del
@@ -146,158 +144,40 @@ namespace NovaFolder.Views
             PunteroService.ColocarJuntoA(this, _ancla.Value, MargenAncla);
         }
 
-        // ---- contenido ----
-
+        // VistaCarpeta ya se redibuja sola; aquí solo la cabecera.
         private void AlCambiarStore()
         {
-            // Si folders.json se recargó desde disco, los objetos son otros:
-            // se vuelve a buscar la carpeta por nombre. Si ya no existe (la
-            // eliminaron), no hay nada que mostrar.
-            if (!_store.Folders.Contains(_folder))
-            {
-                var misma = _store.Buscar(_folder.Name);
-                if (misma == null) { Close(); return; }
-                _folder = misma;
-            }
-            Reconstruir();
+            if (_vista.Carpeta != null) ActualizarCabecera();
         }
 
-        private void Reconstruir()
+        private void ActualizarCabecera()
         {
-            Title = _folder.Name;
-            Titulo.Text = _folder.Name;
-
-            Elementos.Children.Clear();
-            for (int i = 0; i < _folder.Apps.Count; i++)
-            {
-                var app = _folder.Apps[i];
-                int indice = i;
-                var tile = new AppTile(app, CrearMenuElemento(app));
-                tile.AbrirPedido += t => Lanzar(t.App);
-
-                Interacciones.HacerArrastrable(tile, () => new ElementoArrastrado(_folder, app), EfectosAlSacar, AlTerminarArrastre);
-                Interacciones.AceptarSoltar(tile,
-                    rutas => Agregar(rutas, indice),
-                    elemento => Recolocar(elemento, indice),
-                    resaltar: tile);
-
-                Elementos.Children.Add(tile);
-            }
-
-            var hay = _folder.Apps.Count > 0;
-            Vacia.IsVisible = !hay;
-            Desplazador.IsVisible = hay;
-            Ayuda.IsVisible = hay;
-            Buscador.IsVisible = _folder.Apps.Count >= UmbralBuscador;
-            Filtrar();
+            Title = Carpeta.Name;
+            if (!_renombrando) Titulo.Text = Carpeta.Name;
+            Ayuda.IsVisible = Carpeta.Apps.Count > 0;
+            Buscador.IsVisible = Carpeta.Apps.Count >= UmbralBuscador;
         }
-
-        private void Filtrar()
-        {
-            var texto = Buscador.IsVisible ? Buscador.Text?.Trim() ?? "" : "";
-            int visibles = 0;
-
-            foreach (var tile in Elementos.Children.OfType<AppTile>())
-            {
-                tile.IsVisible = texto.Length == 0 || Coincide(tile.App.Name, texto);
-                if (tile.IsVisible) visibles++;
-            }
-
-            SinResultados.IsVisible = _folder.Apps.Count > 0 && visibles == 0;
-        }
-
-        // Sin distinguir mayúsculas ni tildes: "musica" encuentra "Música".
-        private static bool Coincide(string nombre, string texto) =>
-            CultureInfo.CurrentCulture.CompareInfo.IndexOf(nombre, texto,
-                CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
-
-        private AppTile? PrimerVisible() =>
-            Elementos.Children.OfType<AppTile>().FirstOrDefault(t => t.IsVisible);
 
         // ---- acciones ----
-
-        private void Lanzar(AppShortcut app)
-        {
-            var error = AppLauncherService.Lanzar(app.Path);
-            if (error == null) Close();   // como en Android: abrir algo cierra la carpeta
-            else MostrarAviso(error);
-        }
-
-        private void Agregar(IReadOnlyList<string> rutas, int? indice = null) => Intentar(() =>
-        {
-            if (rutas.Count == 0) return;
-            var resultado = _store.AgregarElementos(_folder, rutas, indice);
-            MostrarAviso(resultado.MotivoSiNadaEntro);
-        });
-
-        // Un elemento soltado dentro de esta carpeta: si ya era suyo se
-        // reordena; si viene de otra (no debería, solo hay un popup) se mueve.
-        private void Recolocar(ElementoArrastrado elemento, int indice) => Intentar(() =>
-        {
-            if (elemento.Carpeta == _folder) _store.ReordenarElemento(_folder, elemento.App, indice);
-            else _store.MoverElemento(elemento.App, elemento.Carpeta, _folder);
-        });
-
-        // Qué puede hacer Windows con el archivo si se suelta fuera de la app.
-        // Nunca se permite mover lo que podría romper algo: el .exe de un
-        // juego fuera de su carpeta, o una carpeta entera de otro sitio.
-        private DragDropEffects EfectosAlSacar(ElementoArrastrado elemento)
-        {
-            var ruta = elemento.App.Path;
-            if (_store.EsGestionado(elemento.App)) return DragDropEffects.Move;   // nuestra copia: vuelve tal cual
-            if (EstaEnEscritorio(ruta)) return DragDropEffects.Move;              // ya vive ahí: no se duplica
-            if (Directory.Exists(ruta) || EsPrograma(ruta)) return DragDropEffects.Link;
-            return DragDropEffects.Copy | DragDropEffects.Link;                    // un documento: se copia
-        }
-
-        // Se soltó fuera de NovaFolder: si el archivo se movió, o si era uno
-        // del Escritorio que se soltó en el Escritorio, sale de la carpeta.
-        private void AlTerminarArrastre(ElementoArrastrado elemento, DragDropEffects efecto) => Intentar(() =>
-        {
-            if (elemento.SoltadoDentro || efecto == DragDropEffects.None) return;
-
-            bool salio = _store.QuitarSiYaNoExiste(elemento.Carpeta, elemento.App);
-            if (!salio && EstaEnEscritorio(elemento.App.Path))
-            {
-                _store.QuitarElemento(elemento.Carpeta, elemento.App);
-                salio = true;
-            }
-            if (salio) MostrarAviso($"«{elemento.App.Name}» salió de la carpeta.", esError: false);
-        });
-
-        private bool EstaEnEscritorio(string ruta) =>
-            string.Equals(Path.GetDirectoryName(ruta), _store.Escritorio, StringComparison.OrdinalIgnoreCase);
-
-        private static bool EsPrograma(string ruta) =>
-            Path.GetExtension(ruta).Equals(".exe", StringComparison.OrdinalIgnoreCase);
-
-        // Los errores esperables (validación, carpeta que ya no existe) se
-        // muestran en la propia tarjeta; los inesperados van al manejador
-        // global, que los registra.
-        private void Intentar(Action accion)
-        {
-            try { accion(); }
-            catch (NovaFolderException ex) { MostrarAviso(ex.Message); }
-        }
 
         private async Task AgregarConSelector()
         {
             var archivos = await ConBloqueo(() => StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
-                Title = $"Agregar a «{_folder.Name}»",
+                Title = $"Agregar a «{Carpeta.Name}»",
                 AllowMultiple = true
             }));
-            Agregar(RutasLocales(archivos));
+            _vista.Agregar(RutasLocales(archivos), null);
         }
 
         private async Task AgregarCarpetaDelDisco()
         {
             var carpetas = await ConBloqueo(() => StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
             {
-                Title = $"Agregar una carpeta a «{_folder.Name}»",
+                Title = $"Agregar una carpeta a «{Carpeta.Name}»",
                 AllowMultiple = true
             }));
-            Agregar(RutasLocales(carpetas));
+            _vista.Agregar(RutasLocales(carpetas), null);
         }
 
         private static List<string> RutasLocales(IEnumerable<IStorageItem> items) =>
@@ -325,48 +205,13 @@ namespace NovaFolder.Views
             Aviso.Classes.Set("suave", !esError);
         }
 
-        // ---- menús ----
-
-        private ContextMenu CrearMenuElemento(AppShortcut app)
+        private void Intentar(Action accion)
         {
-            var mover = new MenuItem
-            {
-                Header = "Mover a",
-                Icon = new TextBlock { Text = "\uE8DE", FontFamily = Interacciones.FuenteIconos }
-            };
-            foreach (var otra in _store.Folders.Where(f => f != _folder))
-            {
-                var destino = otra;
-                mover.Items.Add(Interacciones.Opcion(destino.Name, "\uE8B7", () => Intentar(() => _store.MoverElemento(app, _folder, destino))));
-            }
-            mover.IsEnabled = mover.Items.Count > 0;
-
-            var menu = new ContextMenu
-            {
-                Items =
-                {
-                    Interacciones.Opcion("Abrir", "\uE8A7", () => Lanzar(app)),
-                    Interacciones.Opcion("Abrir ubicación del archivo", "\uE838", () =>
-                    {
-                        var error = AppLauncherService.AbrirUbicacion(app.Path);
-                        if (error == null) Close(); else MostrarAviso(error);
-                    }),
-                    mover,
-                    new Separator(),
-                    // Si NovaFolder lo sac\u00F3 del Escritorio, "quitar" es devolverlo;
-                    // si nunca sali\u00F3 de su sitio, solo deja de estar en la carpeta.
-                    _store.EsGestionado(app)
-                        ? Interacciones.Opcion("Devolver al Escritorio", "\uE8A0", () => Intentar(() =>
-                        {
-                            _store.SacarAlEscritorio(_folder, app);
-                            MostrarAviso($"\u00AB{app.Name}\u00BB volvi\u00F3 al Escritorio.", esError: false);
-                        }))
-                        : Interacciones.Opcion("Quitar de la carpeta", "\uE711", () => Intentar(() => _store.QuitarElemento(_folder, app)))
-                }
-            };
-            BloquearMientrasEsteAbierto(menu);
-            return menu;
+            try { accion(); }
+            catch (NovaFolderException ex) { MostrarAviso(ex.Message); }
         }
+
+        // ---- menús ----
 
         private MenuFlyout CrearMenuMas()
         {
@@ -378,18 +223,12 @@ namespace NovaFolder.Views
                     Interacciones.Opcion("Agregar elementos… (Ctrl+O)", "\uE710", () => _ = AgregarConSelector()),
                     Interacciones.Opcion("Agregar una carpeta del disco…", "\uE8F4", () => _ = AgregarCarpetaDelDisco()),
                     new Separator(),
-                    Interacciones.Opcion("Eliminar carpeta (no borra los archivos)", "\uE74D", () => Intentar(() => _store.EliminarCarpeta(_folder)))
+                    Interacciones.Opcion("Eliminar carpeta (no borra los archivos)", "\uE74D", () => Intentar(() => _store.EliminarCarpeta(Carpeta)))
                 }
             };
             menu.Opened += (_, _) => _bloqueosCierre++;
             menu.Closed += (_, _) => AlCerrarMenu();
             return menu;
-        }
-
-        private void BloquearMientrasEsteAbierto(ContextMenu menu)
-        {
-            menu.Opened += (_, _) => _bloqueosCierre++;
-            menu.Closed += (_, _) => AlCerrarMenu();
         }
 
         // Si el menú se llevó el foco, se devuelve a la ventana: si no, un
@@ -408,7 +247,7 @@ namespace NovaFolder.Views
             _renombrando = true;
             MostrarAviso(null);
 
-            EditorTitulo.Text = _folder.Name;
+            EditorTitulo.Text = Carpeta.Name;
             Titulo.IsVisible = false;
             EditorTitulo.IsVisible = true;
             EditorTitulo.Focus();
@@ -417,11 +256,11 @@ namespace NovaFolder.Views
 
         private void ConfirmarRenombrado(bool desdePerdidaDeFoco)
         {
-            if (!_renombrando) return;
+            if (!_renombrando || _vista.Carpeta == null) return;
 
             try
             {
-                _store.RenombrarCarpeta(_folder, EditorTitulo.Text ?? "");
+                _store.RenombrarCarpeta(Carpeta, EditorTitulo.Text ?? "");
                 MostrarAviso(null);
             }
             catch (NovaFolderException ex)
@@ -437,7 +276,7 @@ namespace NovaFolder.Views
         private void TerminarRenombrado()
         {
             _renombrando = false;
-            Titulo.Text = _folder.Name;
+            if (_vista.Carpeta != null) Titulo.Text = Carpeta.Name;
             EditorTitulo.IsVisible = false;
             Titulo.IsVisible = true;
             Focus();
@@ -464,11 +303,11 @@ namespace NovaFolder.Views
         {
             switch (e.Key)
             {
-                case Key.Enter when PrimerVisible() is AppTile primero:
+                case Key.Enter when _vista.PrimerVisible() is AppTile primero:
                     e.Handled = true;
-                    Lanzar(primero.App);
+                    _vista.Lanzar(primero.App);
                     break;
-                case Key.Down when PrimerVisible() is AppTile primero:
+                case Key.Down when _vista.PrimerVisible() is AppTile primero:
                     e.Handled = true;
                     primero.Focus(NavigationMethod.Tab);
                     break;

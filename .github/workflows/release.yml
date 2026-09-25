@@ -46,7 +46,7 @@ jobs:
 
       - name: Pruebas, compilacion e instalador
         shell: pwsh
-        run: ./scripts/publicar.ps1 -Version ${{ steps.version.outputs.numero }}
+        run: ./scripts/publicar.ps1 -Version ${{ steps.version.outputs.numero }} -ConservarAnteriores
 
       - name: Publicar en GitHub Releases
         run: >

@@ -29,6 +29,11 @@
         <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#AE93F5"/>
         <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#8A68E6"/>
         <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#9B7BF0"/>
+        <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillChecked" Color="#9B7BF0"/>
+        <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" Color="#AE93F5"/>
+        <SolidColorBrush x:Key="CheckBoxCheckBackgroundFillCheckedPressed" Color="#8A68E6"/>
+        <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeChecked" Color="#9B7BF0"/>
+        <SolidColorBrush x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" Color="#AE93F5"/>
     </Application.Resources>
 
     <Application.Styles>
@@ -91,6 +96,95 @@
         <!-- El elemento que se está arrastrando queda como "hueco" -->
         <Style Selector="Border.arrastrando">
             <Setter Property="Opacity" Value="0.35"/>
+        </Style>
+
+        <!-- ===== Ventana principal ===== -->
+
+        <Style Selector="TextBlock.h1">
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="TextBlock.texto">
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <!-- Tarjeta de contenido sobre el fondo de la ventana -->
+        <Style Selector="Border.tarjeta">
+            <Setter Property="Background" Value="#0FFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#14FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="18"/>
+        </Style>
+
+        <!-- Botón principal (acento) y secundario con ícono -->
+        <Style Selector="Button.primario">
+            <Setter Property="Background" Value="{StaticResource NovaAcento}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.primario:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#AE93F5"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.secundario">
+            <Setter Property="Background" Value="#14FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.secundario:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#26FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource NovaTexto}"/>
+        </Style>
+        <Style Selector="Button.peligro:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#40FF6B6B"/>
+        </Style>
+
+        <!-- Navegación lateral y listas: selección en morado, no en el
+             color de acento de Windows -->
+        <Style Selector="ListBox.nav, ListBox.lista">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem, ListBox.lista ListBoxItem">
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.lista ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#14FFFFFF"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.lista ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaAcentoSuave}"/>
+        </Style>
+        <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.lista ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#4D9B7BF0"/>
+        </Style>
+        <Style Selector="ListBoxItem.soltar-aqui /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource NovaAcentoSuave}"/>
+        </Style>
+
+        <!-- Área de contenido de una carpeta (VistaCarpeta) -->
+        <Style Selector="Border.vista-marco">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="12"/>
         </Style>
 
         <!-- Destino válido mientras se arrastran archivos encima -->

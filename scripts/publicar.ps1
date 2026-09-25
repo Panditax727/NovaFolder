@@ -18,13 +18,19 @@
     Versión a publicar (SemVer, p. ej. 1.2.0). Por defecto, la de
     Directory.Build.props.
 
+.PARAMETER ConservarAnteriores
+    No borra artifactseleases antes de empaquetar. Lo usa el workflow de
+    Release, que descarga ahí las versiones ya publicadas para generar
+    actualizaciones delta. En local no hace falta.
+
 .EXAMPLE
     .\scripts\publicar.ps1
     .\scripts\publicar.ps1 -Version 1.1.0
 #>
 [CmdletBinding()]
 param(
-    [string]$Version
+    [string]$Version,
+    [switch]$ConservarAnteriores
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,6 +47,9 @@ if ($Version -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') {
 $publish = Join-Path $raiz 'artifacts\publish'
 $releases = Join-Path $raiz 'artifacts\releases'
 Remove-Item $publish -Recurse -Force -ErrorAction SilentlyContinue
+# Velopack no deja empaquetar una versión igual o menor que otra que ya esté
+# en la carpeta de salida: en local se empieza siempre de cero.
+if (-not $ConservarAnteriores) { Remove-Item $releases -Recurse -Force -ErrorAction SilentlyContinue }
 
 function Paso([string]$texto) { Write-Host "`n==> $texto" -ForegroundColor Cyan }
 function Ejecutar([scriptblock]$comando) {

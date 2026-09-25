@@ -1,0 +1,113 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="NovaFolder.Views.Paginas.AjustesPagina">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="14" MaxWidth="760" HorizontalAlignment="Left" Margin="0,0,18,0">
+            <StackPanel Spacing="4" Margin="0,0,0,6">
+                <TextBlock Text="Ajustes" Classes="h1"/>
+                <TextBlock Text="Todo se guarda al momento." Classes="suave" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Escritorio -->
+            <TextBlock Text="ESCRITORIO" Classes="seccion" Margin="4,6,0,0"/>
+            <Border Classes="tarjeta" Padding="6">
+                <StackPanel>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xEA99;"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Limpiar el Escritorio" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Classes="suave" FontSize="12" TextWrapping="Wrap"
+                                           Text="Los accesos directos que metes en una carpeta salen del Escritorio. Si los quitas de la carpeta, vuelven solos."/>
+                            </StackPanel>
+                            <ToggleSwitch Name="InterruptorLimpiar" Grid.Column="2" Classes="compacto"/>
+                        </Grid>
+                    </Border>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xE8B7;"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Carpetas en el Escritorio" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Classes="suave" FontSize="12" TextWrapping="Wrap"
+                                           Text="Un ícono por carpeta en el Escritorio, con la vista previa de su contenido. Doble clic para abrirla; puedes soltar cosas encima."/>
+                            </StackPanel>
+                            <ToggleSwitch Name="InterruptorCarpetas" Grid.Column="2" Classes="compacto"/>
+                        </Grid>
+                    </Border>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xE7F4;"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Widget flotante" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Classes="suave" FontSize="12" TextWrapping="Wrap"
+                                           Text="Una pequeña ventana sobre el fondo de pantalla con tus carpetas, siempre a mano."/>
+                            </StackPanel>
+                            <ToggleSwitch Name="InterruptorWidget" Grid.Column="2" Classes="compacto"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Sistema -->
+            <TextBlock Text="SISTEMA" Classes="seccion" Margin="4,6,0,0"/>
+            <Border Classes="tarjeta" Padding="6">
+                <StackPanel>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xE823;"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Iniciar con Windows" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Classes="suave" FontSize="12" TextWrapping="Wrap"
+                                           Text="Arranca en segundo plano, junto al reloj, para que las carpetas del Escritorio siempre funcionen."/>
+                            </StackPanel>
+                            <ToggleSwitch Name="InterruptorInicio" Grid.Column="2" Classes="compacto"/>
+                        </Grid>
+                    </Border>
+                    <Border Classes="nova-fila">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Classes="glifo" Text="&#xE895;"/>
+                            <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                                <TextBlock Text="Actualizaciones" Classes="texto" FontWeight="SemiBold"/>
+                                <TextBlock Name="EstadoActualizacion" Classes="suave" FontSize="12" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Name="BotonActualizar" Grid.Column="2" Classes="secundario" Content="Buscar ahora"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Datos -->
+            <TextBlock Text="DATOS" Classes="seccion" Margin="4,6,0,0"/>
+            <Border Classes="tarjeta" Padding="6">
+                <Border Classes="nova-fila">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Classes="glifo" Text="&#xE8B7;"/>
+                        <StackPanel Grid.Column="1" Margin="14,0,12,0" Spacing="2">
+                            <TextBlock Text="Configuración y registros" Classes="texto" FontWeight="SemiBold"/>
+                            <TextBlock Name="RutaDatos" Classes="suave" FontSize="12" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Name="BotonDatos" Grid.Column="2" Classes="secundario" Content="Abrir carpeta"/>
+                    </Grid>
+                </Border>
+            </Border>
+
+            <!-- Acerca de -->
+            <Border Classes="tarjeta" Margin="0,8,0,0">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Image Source="avares://NovaFolder/Assets/NovaFolder.ico" Width="40" Height="40"
+                           RenderOptions.BitmapInterpolationMode="HighQuality"/>
+                    <StackPanel Grid.Column="1" Margin="14,0,12,0" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Name="Version" Classes="texto" FontWeight="SemiBold"/>
+                        <TextBlock Text="Tus archivos nunca se borran: NovaFolder solo los ordena." Classes="suave" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button Name="BotonWeb" Classes="secundario" Content="Sitio del proyecto"/>
+                        <Button Name="BotonSalir" Classes="secundario peligro" Content="Salir de NovaFolder"
+                                ToolTip.Tip="Cierra NovaFolder por completo. Las carpetas del Escritorio no se abrirán hasta que vuelvas a iniciarlo."/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

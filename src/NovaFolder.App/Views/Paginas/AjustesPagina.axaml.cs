@@ -1,0 +1,88 @@
+using Avalonia.Controls;
+using NovaFolder.Services.Applications;
+using NovaFolder.Services.Updates;
+using NovaFolder.Views.Principal;
+
+namespace NovaFolder.Views.Paginas
+{
+    // Todas las preferencias en un solo sitio. Cada interruptor se aplica
+    // y se guarda al instante; no hay botón "Guardar".
+    public partial class AjustesPagina : UserControl
+    {
+        private readonly ServiciosApp _servicios = null!;
+        private readonly IAvisador _aviso = null!;
+        private bool _cargando;
+
+        public AjustesPagina() => InitializeComponent();
+
+        public AjustesPagina(ServiciosApp servicios, IAvisador aviso)
+        {
+            InitializeComponent();
+            _servicios = servicios;
+            _aviso = aviso;
+            var store = servicios.Store;
+
+            InterruptorLimpiar.IsCheckedChanged += (_, _) => Si(() => servicios.LimpiarEscritorio(InterruptorLimpiar.IsChecked == true));
+            InterruptorCarpetas.IsCheckedChanged += (_, _) => Si(() => store.EstablecerCarpetasEnEscritorio(InterruptorCarpetas.IsChecked == true));
+            InterruptorWidget.IsCheckedChanged += (_, _) => Si(() => servicios.MostrarWidget(InterruptorWidget.IsChecked == true));
+            InterruptorInicio.IsCheckedChanged += (_, _) => Si(() => servicios.Autoinicio(InterruptorInicio.IsChecked == true));
+
+            BotonActualizar.Click += async (_, _) =>
+            {
+                if (servicios.Actualizaciones.VersionLista != null)
+                {
+                    servicios.Actualizaciones.ReiniciarEInstalar();
+                    return;
+                }
+                BotonActualizar.IsEnabled = false;
+                EstadoActualizacion.Text = "Buscando…";
+                EstadoActualizacion.Text = await servicios.Actualizaciones.BuscarAsync();
+                BotonActualizar.IsEnabled = true;
+                Cargar();
+            };
+            BotonDatos.Click += (_, _) => AppLauncherService.Lanzar(servicios.Rutas.Datos);
+            BotonWeb.Click += (_, _) => AppLauncherService.Lanzar(UpdateService.RepositorioGitHub);
+            BotonSalir.Click += (_, _) => servicios.Salir();
+
+            // Se refresca al volver a la página: el widget pudo ocultarse desde
+            // su propio menú, o la bienvenida pudo cambiar algo.
+            AttachedToVisualTree += (_, _) => Cargar();
+        }
+
+        private void Cargar()
+        {
+            _cargando = true;
+            var store = _servicios.Store;
+            InterruptorLimpiar.IsChecked = store.CleanDesktop;
+            InterruptorCarpetas.IsChecked = store.DesktopFolders;
+            InterruptorWidget.IsChecked = _servicios.WidgetVisible();
+            InterruptorInicio.IsChecked = store.StartWithWindows;
+
+            var actualizaciones = _servicios.Actualizaciones;
+            Version.Text = $"NovaFolder {actualizaciones.VersionActual}";
+            RutaDatos.Text = _servicios.Rutas.Datos;
+            if (actualizaciones.VersionLista is string lista)
+            {
+                EstadoActualizacion.Text = $"La versión {lista} está descargada.";
+                BotonActualizar.Content = "Reiniciar y actualizar";
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(EstadoActualizacion.Text))
+                    EstadoActualizacion.Text = actualizaciones.EstaInstalada
+                        ? "NovaFolder se actualiza solo en segundo plano."
+                        : "Esta copia no se instaló con el instalador: no se actualiza sola.";
+                BotonActualizar.Content = "Buscar ahora";
+            }
+            _cargando = false;
+        }
+
+        // Ignora los cambios que hace Cargar al poner los valores iniciales.
+        private void Si(System.Action accion)
+        {
+            if (_cargando) return;
+            _aviso.Avisar("Guardado.");
+            accion();   // si la acción tiene algo más útil que decir, lo dice después
+        }
+    }
+}

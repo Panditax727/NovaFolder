@@ -82,6 +82,7 @@ namespace NovaFolder.Core.Storage
                 StartWithWindows = config.StartWithWindows,
                 CleanDesktop = config.CleanDesktop,
                 ShowWidget = config.ShowWidget,
+                DesktopFolders = config.DesktopFolders,
                 WelcomeSeen = config.WelcomeSeen,
                 TrayHintShown = config.TrayHintShown,
                 Window = config.WindowX is int x && config.WindowY is int y ? new VentanaDto { X = x, Y = y } : null,
@@ -139,6 +140,7 @@ namespace NovaFolder.Core.Storage
             StartWithWindows = dto.StartWithWindows ?? true,
             CleanDesktop = dto.CleanDesktop ?? false,
             ShowWidget = dto.ShowWidget ?? true,
+            DesktopFolders = dto.DesktopFolders ?? true,
             WelcomeSeen = dto.WelcomeSeen ?? false,
             TrayHintShown = dto.TrayHintShown ?? false,
             WindowX = dto.Window?.X,
@@ -217,6 +219,7 @@ namespace NovaFolder.Core.Storage
         private static NovaConfig ConfigInicial() => new()
         {
             CleanDesktop = true,
+            ShowWidget = false,
             Folders = { new AppFolder { Name = "Favoritos" } }
         };
 
@@ -228,6 +231,7 @@ namespace NovaFolder.Core.Storage
             [JsonPropertyName("startWithWindows")] public bool? StartWithWindows { get; set; }
             [JsonPropertyName("cleanDesktop")] public bool? CleanDesktop { get; set; }
             [JsonPropertyName("showWidget")] public bool? ShowWidget { get; set; }
+            [JsonPropertyName("desktopFolders")] public bool? DesktopFolders { get; set; }
             [JsonPropertyName("welcomeSeen")] public bool? WelcomeSeen { get; set; }
             [JsonPropertyName("trayHintShown")] public bool? TrayHintShown { get; set; }
             [JsonPropertyName("window")] public VentanaDto? Window { get; set; }

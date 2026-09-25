@@ -154,7 +154,7 @@ namespace NovaFolder.Controls
             Control destino,
             Action<IReadOnlyList<string>> alSoltarArchivos,
             Action<ElementoArrastrado>? alSoltarElemento = null,
-            Border? resaltar = null)
+            StyledElement? resaltar = null)
         {
             DragDrop.SetAllowDrop(destino, true);
 

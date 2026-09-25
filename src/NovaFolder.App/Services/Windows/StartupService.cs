@@ -16,6 +16,10 @@ namespace NovaFolder.Services.Windows
         private const string Clave = @"Software\Microsoft\Windows\CurrentVersion\Run";
         private const string NombreValor = "NovaFolder";
 
+        // Con este argumento la app sabe que la abrió Windows al iniciar
+        // sesión, no el usuario: arranca discreta en la bandeja, sin ventana.
+        public const string ArgumentoAutoinicio = "--autostart";
+
         // Idempotente: si ya está registrado con la ruta correcta no toca
         // nada; si cambió de ubicación (ej. tras publicar una nueva
         // versión) actualiza el valor.
@@ -23,15 +27,16 @@ namespace NovaFolder.Services.Windows
         {
             try
             {
-                var rutaExe = Process.GetCurrentProcess().MainModule?.FileName;
+                var rutaExe = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName;
                 if (string.IsNullOrWhiteSpace(rutaExe)) return;
+                var comando = $"\"{rutaExe}\" {ArgumentoAutoinicio}";
 
                 using var clave = Registry.CurrentUser.OpenSubKey(Clave, writable: true)
                                    ?? Registry.CurrentUser.CreateSubKey(Clave);
 
                 var actual = clave?.GetValue(NombreValor) as string;
-                if (!string.Equals(actual, rutaExe, StringComparison.OrdinalIgnoreCase))
-                    clave?.SetValue(NombreValor, rutaExe);
+                if (!string.Equals(actual, comando, StringComparison.OrdinalIgnoreCase))
+                    clave?.SetValue(NombreValor, comando);
             }
             catch (Exception ex)
             {

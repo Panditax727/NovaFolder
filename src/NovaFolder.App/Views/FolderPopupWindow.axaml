@@ -77,34 +77,8 @@
                        IsVisible="False"
                        Margin="0,8,0,0"/>
 
-            <Panel>
-                <ScrollViewer Name="Desplazador"
-                              HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto">
-                    <WrapPanel Name="Elementos" Orientation="Horizontal"/>
-                </ScrollViewer>
-
-                <!-- Estado vacío: explica cómo se llena la carpeta -->
-                <StackPanel Name="Vacia" IsVisible="False" Spacing="10" Margin="12,18,12,14">
-                    <TextBlock Text="&#xE8B7;"
-                               FontFamily="{StaticResource NovaIconos}"
-                               FontSize="34" Opacity="0.35"
-                               Foreground="{StaticResource NovaTexto}"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Classes="suave"
-                               Text="Arrastra aquí apps, juegos o archivos&#x0a;desde el Escritorio o el Explorador."
-                               TextAlignment="Center"
-                               HorizontalAlignment="Center"/>
-                    <Button Name="BotonAgregarVacia" Classes="nova-accion" Content="Elegir archivos…"/>
-                </StackPanel>
-
-                <TextBlock Name="SinResultados"
-                           Classes="suave"
-                           IsVisible="False"
-                           Text="Nada coincide con la búsqueda."
-                           HorizontalAlignment="Center"
-                           Margin="0,24"/>
-            </Panel>
+            <!-- Rejilla de elementos: la misma que usa la ventana principal -->
+            <ContentControl Name="Contenido"/>
         </DockPanel>
     </Border>
 </Window>
