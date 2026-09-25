@@ -1,0 +1,16 @@
+# Propone actualizaciones de dependencias, sobre todo cuando alguna tiene un
+# fallo de seguridad conocido. Cada una llega como Pull Request con las pruebas.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      avalonia:
+        patterns: ["Avalonia*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

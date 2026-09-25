@@ -23,3 +23,16 @@ Thumbs.db
 # Varios
 *.zip
 *.log
+
+# Secretos: nunca deben versionarse (van en los Environments de GitHub)
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+*.cer
+*.publishsettings
+.env
+.env.*
+secrets.json
+*.secrets.json
