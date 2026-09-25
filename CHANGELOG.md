@@ -5,12 +5,18 @@ y las versiones, [SemVer](https://semver.org/lang/es/): `MAYOR.MENOR.PARCHE`.
 
 ## [Sin publicar]
 
-## [1.0.0] - 2026-09-24
+## [1.1.0] - sin publicar
+
+### Añadido
+- **Microsoft Store**: paquete MSIX firmado por Microsoft (sin aviso de SmartScreen), con inicio con Windows mediante tarea de inicio y envío automático desde GitHub Actions (Environment `produccion`).
+- **Desinstalar desde la app**: Ajustes → Desinstalar NovaFolder.
+- Seguridad del repositorio: revisión automática de secretos, Dependabot y política de reporte de vulnerabilidades.
+
+## [1.0.0] - 2026-09-25
 
 Primera versión instalable.
 
 ### Añadido
-- **Microsoft Store**: paquete MSIX firmado por Microsoft (sin aviso de SmartScreen), con inicio con Windows mediante tarea de inicio y envío automático desde GitHub Actions (Environment `produccion`).
 - **Ventana principal** de aplicación (barra de tareas, Alt+Tab, menú Inicio) con cuatro secciones: Carpetas, Ordenar Escritorio, Ajustes y Ayuda. Se abre al instalar y al lanzar NovaFolder; al cerrarla sigue en la bandeja.
 - **Ordenar Escritorio**: revisa lo que está suelto (también en el Escritorio común), sugiere una carpeta para cada cosa (Juegos, Apps, Documentos, Imágenes, Carpetas, Enlaces web…) y lo ordena todo con un clic, con Deshacer.
 - Opción «Carpetas en el Escritorio» para crear o quitar los accesos de carpeta del Escritorio.

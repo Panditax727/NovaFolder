@@ -60,11 +60,13 @@ Cualquiera de estas tres formas:
 - **Configuración de Windows → Aplicaciones → Aplicaciones instaladas → NovaFolder → Desinstalar.**
 - Clic derecho sobre NovaFolder en el menú Inicio → **Desinstalar**.
 
-Si lo instalaste desde la Microsoft Store, los accesos directos que NovaFolder había guardado quedan en **Documentos\NovaFolder\Accesos guardados**: puedes devolverlos al Escritorio desde ahí.
+**Si lo instalaste con el Setup de GitHub:**
 
 - Se quitan el inicio automático y las carpetas de NovaFolder del Escritorio.
 - Los accesos directos que NovaFolder había guardado **vuelven a tu Escritorio**: no pierdes nada.
 - Tu configuración queda en `%APPDATA%\NovaFolder` por si lo vuelves a instalar; puedes borrarla.
+
+**Si lo instalaste desde la Microsoft Store:** Windows borra la configuración de NovaFolder, y los accesos directos que había guardado quedan en **Documentos\NovaFolder\Accesos guardados**, de donde puedes devolverlos al Escritorio.
 
 ## Si algo falla
 
